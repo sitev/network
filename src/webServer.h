@@ -2,7 +2,7 @@
 
 #include "cj.h"
 
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 
 namespace cj {
 
@@ -58,9 +58,9 @@ public:
 
 	int socketPort;
 	ServerSocket *ss;
-	int epoll_fd;
-	struct epoll_event event;
-	struct epoll_event *events;
+//	int epoll_fd;
+//	struct epoll_event event;
+//	struct epoll_event *events;
 
 	WebServer(int port = 80);
 	virtual ~WebServer() {}

@@ -3,7 +3,7 @@
 #include "cj.h"
 #include "cjNetwork.h"
 
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 #include <signal.h>
 
 
@@ -602,7 +602,9 @@ void WebServer::threadFunction(Socket *socket)
 
 void WebServer::run() {
 	try {
+#ifdef OS_LINUX
 		signal(SIGPIPE, SIG_IGN);
+#endif
 		isRunning = true;
 		bool flag = ss->create(AF_INET, SOCK_STREAM, 0);
 		if (!flag)

@@ -142,9 +142,15 @@ bool Socket::sendAll(void *buffer, int size) {
 		}
 		int sz;
 		try {
+#ifdef OS_LINUX
 			if (errorFlag) sz = ::send(m_sock, ptr, 1, MSG_NOSIGNAL);
 			//else if (size > 1024) sz = ::send(m_sock, ptr, 1024, MSG_NOSIGNAL);
 			else sz = ::send(m_sock, ptr, size, MSG_NOSIGNAL);
+#endif
+#ifdef OS_WINDOWS
+			if (errorFlag) sz = ::send(m_sock, ptr, 1, 0);
+			else sz = ::send(m_sock, ptr, size, 0);
+#endif
 
 			printf("sa sz = %d pause = %d\n", sz, pause);
 			usleep(pause);
