@@ -124,63 +124,55 @@ int Socket::send(Memory &memory) {
 }
 
 bool Socket::sendAll(void *buffer, int size) {
-	printf("sa1\n");
-
 	if (!isValid()) return 0;
 	char *ptr = (char*) buffer;
-	printf("sa2\n");
 
 	int counter = 0, pause = 1000;
-	bool errorFlag = false;
+	int calcSize = 1024, calcStep = 1;
+	int flagcnt = 0;
+
 	while (size > 0)
 	{
-		try {
-			printf("sa3 size = %d counter = %d %d\n", size, counter, ptr);
-		}
-		catch(...) {
-			printf("catch(...)\n");
-		}
+		flagcnt++;
 		int sz;
 		try {
 #ifdef OS_LINUX
-			if (errorFlag) sz = ::send(m_sock, ptr, 1, MSG_NOSIGNAL);
-			//else if (size > 1024) sz = ::send(m_sock, ptr, 1024, MSG_NOSIGNAL);
+			if (size > calcSize) sz = ::send(m_sock, ptr, calcSize, MSG_NOSIGNAL);
 			else sz = ::send(m_sock, ptr, size, MSG_NOSIGNAL);
 #endif
 #ifdef OS_WINDOWS
-			if (errorFlag) sz = ::send(m_sock, ptr, 1, 0);
+			if (size > calcSize) sz = ::send(m_sock, ptr, calcSize, 0);
 			else sz = ::send(m_sock, ptr, size, 0);
 #endif
 
-			printf("sa sz = %d pause = %d\n", sz, pause);
+			LOGGER_OUT("OUT", "size = " + (String)size + " retSize = " + (String)sz);
+
 			usleep(pause);
 		}
 		catch(...) {
 			usleep(pause);
 			continue;
 		}
-		errorFlag = false;
 		if (sz < 0) {
-			errorFlag = true;
 			int err = errno;
-			printf("error = %d\n", err);
+			LOGGER_ERROR("error = " + (String)err);
 			if (errno != 11) return false;
 		}
 		if (sz < 1) {
-			printf("sa4\n");
+			calcSize = 1;
+			calcStep = 1;
 			counter++;
 			if (counter > 10000) return false;
-			//pause = pause * 5;
-			if (pause > 1000000) pause = 1000000;
-			//if (pause > 1000) pause = 1000;
 			continue;
 		}
-		pause = 1000;
+		calcStep = calcStep * 2;
+		calcSize = (calcSize + sz) / 2 + calcStep;
+		if (calcSize > 1024) calcSize = 1024;
+		if (calcSize < 0) calcSize = 0;
+
 		ptr += sz;
 		size -= sz;
 	}
-	printf("sa5\n");
-
 	return true;
 }
 

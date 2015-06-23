@@ -73,7 +73,7 @@ bool RequestHeader::parse(Memory request) {
 	isFileFlag = false;
 	clear();
 
-	LOGGER_TRACE("request = " + request);
+	LOGGER_TRACE("request parse");
 	int pos1 = find(request, ' ');
 	if (pos1 <= 0) return false;
 
@@ -83,9 +83,27 @@ bool RequestHeader::parse(Memory request) {
 	LOGGER_TRACE("method = " + method);
 
 	pos1++;
+
+	int savePos = request.getPos();
 	string httpstr = " HTTP/1.1\r\n";
 	int pos2 = find(request, httpstr);
-	if (pos2 <= pos1) return false;
+	printf("pos1 = %d, pos2 = %d\n", pos1, pos2);
+	if (pos2 <= pos1) {
+		printf("pos2 <= pos1\n");
+		request.setPos(savePos);
+		httpstr = " HTTP/1.0\r\n";
+		pos2 = find(request, httpstr);
+		printf("pos1 = %d, pos2 = %d\n", pos1, pos2);
+		if (pos2 <= pos1) return false;
+		add("Version", (string)"1.0");
+		LOGGER_OUT("Version", "Version = 1.0");
+
+	}
+	else {
+		add("Version", (string)"1.1");
+		LOGGER_OUT("Version", "Version = 1.1");
+	}
+
 	char ch = getChar(request, pos1);
 	if (ch != '/') return false;
 	ch = getChar(request, pos1 + 1);
@@ -94,6 +112,8 @@ bool RequestHeader::parse(Memory request) {
 	string sParams = substr(request, pos1 + 1, pos2 - pos1 - 1);
 	string sDecode = decodeCp1251(sParams);
 	add("Params", sDecode);
+	LOGGER_OUT("Params", "Params = " + sDecode);
+
 
 	if (isFile(sParams, fileExt)) {
 		isFileFlag = true;
@@ -101,7 +121,6 @@ bool RequestHeader::parse(Memory request) {
 	else 
 		parseParams(sParams);
 
-	add("Version", (string)"1.1");
 
 	while (true) {
 		pos1 = request.getPos();
@@ -466,10 +485,13 @@ void WebServerHandler::threadStep(Socket *socket) {
 		//// }
 
 		printf("----------\n");
+		string s = "";
 		int count = request.memory.getSize();
 		for (int i = 0; i < count; i++) {
 			printf("%c", ((char*)request.memory.data)[i]);
+			s = s + ((char*)request.memory.data)[i];
 		}
+		LOGGER_OUT("HTML", s);
 		printf("\n");
 		request.parse();
 		application->g_mutex.unlock();
@@ -498,6 +520,7 @@ void WebServerHandler::threadStep(Socket *socket) {
 
 void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response) {
 	string host = request.header.getValue("Host").toString8();
+
 	//host = "sitev.ru";
 
 	if (!request.header.isFileFlag && isPageExist(host))
@@ -515,7 +538,9 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 		File *f = new File(fn, "rb");
 		bool flag = f->isOpen();
 		if (flag) {
-			string s = "HTTP/1.1 200 OK\r\nContent-Type: ";
+			string version = request.header.getValue_s("Version");
+			printf("version = %s\n", version.c_str());
+			string s = "HTTP/" + version + " 200 OK\r\nContent-Type: ";
 			if (request.header.fileExt == "html") s = s + "text/html";
 			else if (request.header.fileExt == "ico") s = s + "image/ico";
 			else if (request.header.fileExt == "png") s = s + "image/png";
@@ -523,27 +548,22 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 			else if (request.header.fileExt == "js") s = s + "text/javascript";
 			else if (request.header.fileExt == "css") s = s + "text/css";
 			else if (request.header.fileExt == "gif") s = s + "image/gif";
+			else if (request.header.fileExt == "apk") s = s + "application/vnd.android.package-archive";
+			else if (request.header.fileExt == "jar") s = s + "application/java-archive";
+			else if (request.header.fileExt == "jad") s = s + "text/vnd.sun.j2me.app-descriptor";
 			else s = s + "application/octet-stream";
 
-			printf("%s /// %s\n", request.header.fileExt.c_str(), s.c_str());
-
 			int sz = f->getSize();
-			printf("1\n");
-			s = s + "\r\nContent - Length: " + to_string(sz) + "\r\n\r\n";
-			printf("2\n");
+			s = s + "\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=100\r\nContent-Length: " + to_string(sz) + "\r\n\r\n";
+
+			LOGGER_OUT("HTTP", s);
+
 			response.memory.write((void*)(s.c_str()), s.length());
-			printf("3\n");
 
 			Memory mem;
-			printf("4\n");
 			mem.setSize(sz);
-			printf("5\n");
 			f->read(mem.data, sz);
-			printf("6\n");
 			response.memory.write(mem.data, sz);
-			printf("7\n");
-
-			int a = 1;
 		}
 		delete f;
 	}
@@ -602,9 +622,13 @@ void WebServer::threadFunction(Socket *socket)
 
 void WebServer::run() {
 	try {
-#ifdef OS_LINUX
-		signal(SIGPIPE, SIG_IGN);
-#endif
+		//signal(SIGPIPE, SIG_IGN);
+/*
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_handler = SIG_IGN;
+        sigaction(SIGPIPE, &sa, NULL);
+*/
 		isRunning = true;
 		bool flag = ss->create(AF_INET, SOCK_STREAM, 0);
 		if (!flag)
