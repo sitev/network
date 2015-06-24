@@ -520,8 +520,7 @@ void WebServerHandler::threadStep(Socket *socket) {
 
 void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response) {
 	string host = request.header.getValue("Host").toString8();
-
-	//host = "sitev.ru";
+	if (host == "127.0.0.1:8080") host = "sitev.ru";
 
 	if (!request.header.isFileFlag && isPageExist(host))
 	{
