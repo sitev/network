@@ -177,9 +177,46 @@ bool RequestHeader::parseParams(String sss) {
 		pos++;
 	}
 
-	string par = s.substr(pos);
+	string path = s.substr(pos);
+
+	//string path = "param1/param2/name1=value1&name2=value2";
 
 	pos = 0;
+	int posEnd = path.length();
+	int mode = 1;
+	int index = 1;
+	string name = "", value = "";
+
+	while (true) {
+		if (pos >= posEnd || path[pos] == '/' || path[pos] == '&') {
+			if (mode == 1) {
+				if (name != "") {
+					value = name;
+					name = "p" + to_string(index);
+					index++;
+					params.insert(name, value);
+					name = "";
+					value = "";
+				}
+			}
+			else {
+				params.insert(name, value);
+				name = "";
+				value = "";
+				mode = 1;
+			}
+			if (pos >= posEnd) break;
+		}
+		else if (path[pos] == '=') {
+			mode = 2;
+		}
+		else {
+			if (mode == 1) name += path[pos]; else value += path[pos];
+		}
+		pos++;
+	}
+
+	/*
 	while (1) {
 		int pos1 = par.find("=", pos);
 		string name = par.substr(pos, pos1 - pos);
@@ -198,6 +235,7 @@ bool RequestHeader::parseParams(String sss) {
 
 		if (pos2 == par.size()) break;
 	}
+	*/
 
 	//for(map<string, string>::iterator i = pars.begin(); i != pars.end(); i++) {
 		//printf("/// name = %s & value = %s /// \n", (*i).first.c_str(), (*i).second.c_str());
