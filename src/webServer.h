@@ -6,18 +6,23 @@
 
 namespace cj {
 
+enum ParamType {ptGET, ptPOST, ptCOOKIE};
+
 class RequestHeader : public ParamList {
 public:
-	ParamList params;
+	ParamList GET;
+	ParamList POST;
+	ParamList COOKIE;
 	bool isFileFlag;
 	string fileExt;
 	RequestHeader();
-	virtual bool parse(String request);
 	virtual bool parse(Memory request);
 private:
-	virtual bool parseParams(String sss);
+	virtual bool parseParams(String sParams, ParamType pt);
 	virtual bool isFile(string s, string &fileExt);
+public:
 	virtual string decodeCp1251(string s);
+private:
 	virtual int find(Memory &request, char a);
 	virtual int find(Memory &request, string s);
 	virtual string substr(Memory &request, int pos, int count);
@@ -37,6 +42,9 @@ public:
 class HttpResponse {
 public:
 	Memory memory;
+	HttpResponse() {
+	}
+
 };
 
 class WebServerHandler : public Object {

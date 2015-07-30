@@ -16,58 +16,6 @@ namespace cj {
 RequestHeader::RequestHeader() {
 
 }
-bool RequestHeader::parse(String request) {
-	/*
-	isFileFlag = false;
-	clear();
-
-	LOGGER_TRACE("request = " + request);
-	int pos1 = request.getPos(" ");
-	if (pos1 <= 0) return false;
-	String method = request.subString(0, pos1);
-
-	add("Method", method);
-
-	LOGGER_TRACE("method = " + method);
-
-	String httpstr = " HTTP/1.1\r\n";
-	int pos2 = request.getPos(httpstr);
-	if (pos2 <= pos1) return false;
-	string sParams = request.subString(pos1 + 2, pos2 - pos1 - 2);
-	string sss = decodeCp1251(sParams);
-
-	add("Params", sss);
-
-	if (isFile(sParams, fileExt)) {
-		isFileFlag = true;
-	}
-	else parseParams(sParams);
-
-	add("Version", (String)"1.1");
-
-	String s = request.subString(pos2 + httpstr.getLength());
-	while (true) {
-		string s8 = s.toString8();
-		pos1 = s.getPos(":");
-		if (pos1 <= 0) break;
-		String name = s.subString(0, pos1);
-		string n8 = name.toString8();
-
-		s = s.subString(pos1 + 2);
-
-		pos1 = s.getPos("\r\n");
-		if (pos1 <= 0) break;
-
-		String value = s.subString(0, pos1);
-		string v8 = value.toString8();
-
-		add(name, value);
-
-		s = s.subString(pos1 + 2);
-	}
-	*/
-	return true;
-}
 
 bool RequestHeader::parse(Memory request) {
 	isFileFlag = false;
@@ -119,7 +67,7 @@ bool RequestHeader::parse(Memory request) {
 		isFileFlag = true;
 	}
 	else 
-		parseParams(sParams);
+		parseParams(sParams, ptGET);
 
 
 	while (true) {
@@ -127,44 +75,40 @@ bool RequestHeader::parse(Memory request) {
 		pos2 = find(request, ":");
 		if (pos2 < 0) break;
 		int pos3 = find(request, "\r\n");
+//		int pos4 = find(request, "\r\n");
+
 		if (pos3 <= 0) break;
 		string name = substr(request, pos1, pos2 - pos1);
 		string value = substr(request, pos2 + 2, pos3 - pos2 - 2);
 		add(name, value);
-		//break;
+
+		if (name == "Cookie") {
+			parseParams(value, ptCOOKIE);
+		}
 	}
 
-	/*
-	String s = substr(request, pos2 + httpstr.length());
-	while (true) {
-		string s8 = s.toString8();
-		pos1 = s.getPos(":");
-		if (pos1 <= 0) break;
-		String name = s.subString(0, pos1);
-		string n8 = name.toString8();
-
-		s = s.subString(pos1 + 2);
-
-		pos1 = s.getPos("\r\n");
-		if (pos1 <= 0) break;
-
-		String value = s.subString(0, pos1);
-		string v8 = value.toString8();
-
-		add(name, value);
-
-		s = s.subString(pos1 + 2);
+	if (method == "POST") {
+		pos1 = pos1 + 2;
+		sParams = substr(request, pos1, request.getSize() - pos1);
+		string sDecode = decodeCp1251(sParams);
+		parseParams(sDecode, ptPOST);
 	}
-	*/
 
 	return true;
 }
 
-bool RequestHeader::parseParams(String sss) {
-	params.clear();
-	if (sss == "") return true;
+bool RequestHeader::parseParams(String sParams, ParamType pt) {
+	ParamList *params;
+	if (pt == ptGET) params = &GET;
+	else if (pt == ptPOST) 
+		params = &POST;
+	else 
+		params = &COOKIE;
 
-	string s = sss.toString8();
+	params->clear();
+	if (sParams == "") return true;
+
+	string s = sParams.toString8();
 
 	int pos = 0;
 	string tmp = s.substr(pos, 1);
@@ -188,19 +132,19 @@ bool RequestHeader::parseParams(String sss) {
 	string name = "", value = "";
 
 	while (true) {
-		if (pos >= posEnd || path[pos] == '/' || path[pos] == '&') {
+		if (pos >= posEnd || path[pos] == '/' || path[pos] == '&' || path[pos] == '?' || path[pos] == ';') {
 			if (mode == 1) {
 				if (name != "") {
 					value = name;
 					name = "p" + to_string(index);
 					index++;
-					params.insert(name, value);
+					params->insert(name, value);
 					name = "";
 					value = "";
 				}
 			}
 			else {
-				params.insert(name, value);
+				params->insert(name, value);
 				name = "";
 				value = "";
 				mode = 1;
@@ -215,31 +159,6 @@ bool RequestHeader::parseParams(String sss) {
 		}
 		pos++;
 	}
-
-	/*
-	while (1) {
-		int pos1 = par.find("=", pos);
-		string name = par.substr(pos, pos1 - pos);
-		//printf("name = %s & ", name.c_str());
-		pos = pos1 + 1;
-
-		int pos2 = par.find("&", pos);
-		if (pos2 == -1) pos2 = par.size();
-		string value = par.substr(pos, pos2 - pos);
-		//printf("value = %s\n", value.c_str());
-		pos = pos2 + 1;
-
-		params.insert(name, value);
-
-		//GETHandler(name, value);
-
-		if (pos2 == par.size()) break;
-	}
-	*/
-
-	//for(map<string, string>::iterator i = pars.begin(); i != pars.end(); i++) {
-		//printf("/// name = %s & value = %s /// \n", (*i).first.c_str(), (*i).second.c_str());
-	//}
 
 	return true;
 }
@@ -266,7 +185,7 @@ string urlDecode(string &SRC) {
 			ret += SRC[i];
 		}
 	}
-	return (ret);
+	return ret;
 }
 
 #define LINE_MAX 1024
@@ -403,20 +322,6 @@ string RequestHeader::decodeCp1251(string s) {
 #ifdef OS_LINUX
 	return utf8;
 #endif
-	/*
-	String res = "";
-	int len = s.getLength();
-	for (int i = 0; i < len; i++) {
-		Char c = s.getChar(i);
-		if (c.get() == '%') {
-			String sCode = "0x" + s.subString(i + 1, 2);
-			char code = sCode.toInt();
-			res = res + (String)code;
-		}
-		else res = res + c.get();
-	}
-	return res;
-	*/
 }
 
 int RequestHeader::find(Memory &request, char a) {
@@ -436,7 +341,8 @@ int RequestHeader::find(Memory &request, string s) {
 	bool flag = false;
 	while (!request.eof()) {
 		if (!flag) {
-			flag = find(request, s[0]);
+			flag = true;
+			if (find(request, s[0]) < 0) flag = false;
 			index = 1;
 		}
 		else {
@@ -529,6 +435,7 @@ void WebServerHandler::threadStep(Socket *socket) {
 			printf("%c", ((char*)request.memory.data)[i]);
 			s = s + ((char*)request.memory.data)[i];
 		}
+		printf("----------\n");
 		LOGGER_OUT("HTML", s);
 		printf("\n");
 		request.parse();
@@ -592,6 +499,7 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 
 			int sz = f->getSize();
 			s = s + "\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=100\r\nContent-Length: " + to_string(sz) + "\r\n\r\n";
+			//s = s + "\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=100\r\nSet-Cookie: name=newvalue\r\nContent-Length: " + to_string(sz) + "\r\n\r\n";
 
 			LOGGER_OUT("HTTP", s);
 
@@ -616,12 +524,12 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 		s = s + name + " = " + value + "\r\n";
 	}
 
-	count = request.header.params.getCount();
+	count = request.header.GET.getCount();
 	s = s + to_string(count) + "\r\n";
 
 	for (int i = 0; i < count; i++) {
-		String name = request.header.params.getName(i);
-		String value = request.header.params.getValue(i);
+		String name = request.header.GET.getName(i);
+		String value = request.header.GET.getValue(i);
 		s = s + name.toString8() + " = " + value.toString8() + "\r\n";
 	}
 
