@@ -27,6 +27,7 @@ private:
 	virtual int find(Memory &request, string s);
 	virtual string substr(Memory &request, int pos, int count);
 	virtual char getChar(Memory &request, int pos);
+	virtual string htmlEntities(string s);
 };
 
 class HttpRequest {

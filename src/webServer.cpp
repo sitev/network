@@ -375,6 +375,38 @@ char RequestHeader::getChar(Memory &request, int pos) {
 	return ((char*)request.data)[pos];
 }
 
+string RequestHeader::htmlEntities(string s) {
+	string r = "";
+	int len = s.length();
+	for (int i = 0; i < len; i++) {
+		char ch = s[i];
+		switch (ch) {
+		case '&': {
+			r = r + "'&amp'";
+			break;
+		}
+		case '<': {
+			r = r + "'&lt'";
+			break;
+		}
+		case '>': {
+			r = r + "'&gt'";
+			break;
+		}
+		case '"': {
+			r = r + "'&guot'";
+			break;
+		}
+		case '\'': {
+			r = r + "'&apos'";
+			break;
+		}
+		default:
+			r = r + ch;
+		}
+	}
+	return r;
+}
 
 
 //--------------------------------------------------------------------------------------------------
