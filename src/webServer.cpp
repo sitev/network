@@ -135,6 +135,7 @@ bool RequestHeader::parseParams(String sParams, ParamType pt) {
 		if (pos >= posEnd || path[pos] == '/' || path[pos] == '&' || path[pos] == '?' || path[pos] == ';') {
 			if (mode == 1) {
 				if (name != "") {
+					name = htmlEntities(name);
 					value = name;
 					name = "p" + to_string(index);
 					index++;
@@ -144,6 +145,8 @@ bool RequestHeader::parseParams(String sParams, ParamType pt) {
 				}
 			}
 			else {
+				name = htmlEntities(name);
+				value = htmlEntities(value);
 				params->insert(name, value);
 				name = "";
 				value = "";
