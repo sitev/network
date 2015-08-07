@@ -20,9 +20,7 @@ public:
 private:
 	virtual bool parseParams(String sParams, ParamType pt);
 	virtual bool isFile(string s, string &fileExt);
-public:
-	virtual string decodeCp1251(string s);
-private:
+	virtual string urlDecode(string s);
 	virtual int find(Memory &request, char a);
 	virtual int find(Memory &request, string s);
 	virtual string substr(Memory &request, int pos, int count);
