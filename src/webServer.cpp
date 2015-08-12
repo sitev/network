@@ -282,6 +282,22 @@ string RequestHeader::htmlEntities(string s) {
 	return r;
 }
 
+string RequestHeader::decodeHtmlTags(string s, string tag, string dst) {
+	while (true) {
+		int pos = s.find(tag);
+		if (pos < 0) break;
+		s.replace(pos, tag.size(), dst);
+	}
+	return s;
+}
+
+string RequestHeader::htmlEntitiesDecode(string s) {
+	s = decodeHtmlTags(s, "&ltp&gt", "<p>");
+	s = decodeHtmlTags(s, "&lt/p&gt", "</p>");
+	return s;
+}
+
+
 
 //--------------------------------------------------------------------------------------------------
 //----------          class HttpRequest          ---------------------------------------------------
