@@ -2,6 +2,7 @@
 
 #include "cj.h"
 #include "cjNetwork.h"
+#include <sys/stat.h>
 
 //#include <sys/epoll.h>
 #include <signal.h>
@@ -394,12 +395,18 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 		step(request, response);
 	}
 	else {
-		string fn = request.header.getValue_s("Params");
-		if (fn == "") {
-			fn = "index_tpl.html";
+		string fn1 = request.header.getValue_s("Params");
+		if (fn1 == "") {
+			fn1 = "index_tpl.html";
 			request.header.fileExt = "html";
 		}
-		fn = "/var/www/" + host + "/" + fn;
+		string fn = "/var/www/" + host + "/" + fn1;
+		int ret;
+		struct stat buf;
+		if ((ret = stat(fn.c_str(), &buf)) != 0) {
+			fn = "/var/www/common/" + fn1;
+		}
+
 		printf("filename = %s\n", fn.c_str());
 		File *f = new File(fn, "rb");
 		bool flag = f->isOpen();
