@@ -322,6 +322,7 @@ void HttpRequest::parse() {
 	int t2 = 0;//GetTickCount();
 	//printf("tick2 = %d %d\n", t2, t2 - t1);
 	//header.parse(s);
+	memory.setPos(0);
 	header.parse(memory);
 
 	int t3 = 0;//GetTickCount();
