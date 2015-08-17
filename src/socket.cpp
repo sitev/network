@@ -96,13 +96,14 @@ int Socket::recv(void *buffer, int size) {
 
 int Socket::recv(Memory &memory) {
 	int size = this->getCurSize();
+	if (size <= 0) return size;
+
 	int pos = memory.getPos();
 	memory.setSize(size + pos);
-	int len = this->recv(((char*)memory.data) + pos, size);
+	this->recv(((char*)memory.data) + pos, size);
 	memory.setPos(pos + size);
-	return len;
+	return size;
 }
-
 
 int Socket::send(String s) {
 	if (!isValid()) return 0;

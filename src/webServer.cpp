@@ -344,40 +344,74 @@ void WebServerHandler::threadStep(Socket *socket) {
 		response.memory.setPos(0);
 		response.memory.setSize(0);
 
-		//// recvAll {
-		while (true) {
-			int size = socket->getCurSize();
-			if (size <= 0) break;
-			socket->recv(request.memory);
-		}
-		//// }
-
-		printf("----------\n");
-		string s = "";
-		int count = request.memory.getSize();
-		for (int i = 0; i < count; i++) {
-			printf("%c", ((char*)request.memory.data)[i]);
-			s = s + ((char*)request.memory.data)[i];
-		}
-		printf("----------\n");
-		LOGGER_OUT("HTML", s);
-		printf("\n");
-		request.parse();
+		int posStart = 0, posCur = 0;
+		Memory temp;
 		application->g_mutex.unlock();
-		LOGGER_OUT("MUTEX", "application->g_mutex.unlock();");
 
-		internalStep(request, response);
+		while (true) {
+			application->g_mutex.lock();
+			//// recvAll {
+			while (true) {
+				int len = socket->recv(temp);
+				if (len == 0) break;
+				if (len < 0) {
+					if (errno != EAGAIN) break;
+				}
+			}
+			//// }
 
-		printf("8\n");
-		LOGGER_OUT("MUTEX", "application->g_mutex.lock(); {");
-		application->g_mutex.lock();
-		LOGGER_OUT("MUTEX", "application->g_mutex.lock(); }");
-		printf("9\n");
-		if (socket->sendAll(response.memory)) LOGGER_TRACE("sendAll OK!"); else LOGGER_TRACE("sendAll error ...");
+			int step = 0;
+			while (true) {
+				int pos = temp.getPos();
+				if (posCur > pos) break;
+
+				char u = *(((char*)temp.data) + posCur);
+				request.memory.writeChar(u);
+				if (step == 0 && u == '\015') 
+					step++;
+				else if (step == 1 && u == '\012') 
+					step++;
+				else if (step == 2 && u == '\015') 
+					step++;
+				else if (step == 3 && u == '\012') {
+					posCur++;
+					break;
+				}
+				posCur++;
+			}
+
+			
+			printf("----------\n");
+			string s = "";
+			int count = request.memory.getSize();
+			for (int i = 0; i < count; i++) {
+				printf("%c", ((char*)request.memory.data)[i]);
+				s = s + ((char*)request.memory.data)[i];
+			}
+			printf("----------\n");
+			LOGGER_OUT("HTML", s);
+			printf("\n");
+			request.parse();
+			application->g_mutex.unlock();
+			LOGGER_OUT("MUTEX", "application->g_mutex.unlock();");
+
+			internalStep(request, response);
+
+			printf("8\n");
+			LOGGER_OUT("MUTEX", "application->g_mutex.lock(); {");
+			application->g_mutex.lock();
+			LOGGER_OUT("MUTEX", "application->g_mutex.lock(); }");
+			printf("9\n");
+			if (socket->sendAll(response.memory)) LOGGER_TRACE("sendAll OK!"); else LOGGER_TRACE("sendAll error ...");
+			application->g_mutex.unlock();
+
+			break;
+		}
+
 		socket->close();
 		delete socket;
 		printf("10\n");
-		application->g_mutex.unlock();
+		//application->g_mutex.unlock();
 	}
 	catch(...) {
 		LOGGER_ERROR("Error in threadStep try catch");
@@ -497,13 +531,6 @@ void WebServer::threadFunction(Socket *socket)
 
 void WebServer::run() {
 	try {
-		//signal(SIGPIPE, SIG_IGN);
-/*
-        struct sigaction sa;
-        memset(&sa, 0, sizeof(sa));
-        sa.sa_handler = SIG_IGN;
-        sigaction(SIGPIPE, &sa, NULL);
-*/
 		isRunning = true;
 		bool flag = ss->create(AF_INET, SOCK_STREAM, 0);
 		if (!flag)
@@ -517,68 +544,10 @@ void WebServer::run() {
 
 		ss->setNonBlocking(true);
 		ss->listen();
-/*
-		epoll_fd = epoll_create1(0);
 
-		event.data.fd = ss->m_sock;
-		event.events = EPOLLIN | EPOLLET;
-		epoll_ctl(epoll_fd, EPOLL_CTL_ADD, ss->m_sock, &event);
-
-		events = (epoll_event *)calloc(MAXCONNECTIONS, sizeof(event));
-
-		int cnt=0;
-		int event_cnt=0;
-*/
 		int mycnt = 0;
 		while (isRunning)
 		{
-			/*
-			event_cnt = epoll_wait(epoll_fd, events, MAXCONNECTIONS, -1);
-
-			for (int iEvent = 0; iEvent < event_cnt; iEvent++) {
-				if( !(events[i].events & EPOLLIN) ){
-					printf("epoll_wait error [%d].", errno);
-					return;
-				}
-				else if(ss->m_sock == events[i].data.fd) {
-					printf("Connect request(s) received.\n");
-					while(1){
-
-				len = sizeof(client);
-				conn_sock = accept(listen_sock, (struct sockaddr *)&client, (socklen_t *)&len);
-				if( conn_sock == -1 ){
-				if ( errno == EAGAIN ){
-				printf("Processed all incoming connections @ %d.\n", listen_sock);
-				break;
-				}else{
-				fprintf(stderr, "accept error [%d].", errno);
-				return -1;
-				}
-				}
-				flags = fcntl( conn_sock, F_GETFL, 0 );
-				if( flags == -1 ){
-				fprintf(stderr,"fcntl error[%d].",errno);
-				return -1;
-				}
-				flags |= O_NONBLOCK;
-				if( fcntl( conn_sock, F_SETFL, flags ) == -1 ){
-				fprintf(stderr,"fcntl error[%d].",errno);
-				return -1;
-				}
-
-				event.data.fd = conn_sock;
-				event.events = EPOLLIN | EPOLLET;
-				if( epoll_ctl( epoll_fd, EPOLL_CTL_ADD, conn_sock, &event) == -1 ){
-				fprintf(stderr, "epoll_ctl error [%d].",errno);
-				return -1;
-				}
-				printf("Added %d to epoll instance.\n",conn_sock);
-
-				}
-
-				}
-			}
-*/
 			ss->accept();
 
 			mycnt++;
