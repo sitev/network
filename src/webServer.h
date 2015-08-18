@@ -16,7 +16,8 @@ public:
 	bool isFileFlag;
 	string fileExt;
 	RequestHeader();
-	virtual bool parse(Memory request);
+	virtual bool parse(Memory &request);
+	virtual void parsePOSTParams(Memory &memory);
 private:
 	virtual bool parseParams(String sParams, ParamType pt);
 	virtual bool isFile(string s, string &fileExt);
@@ -55,6 +56,10 @@ protected:
 	HttpResponse response;
 public:
 	WebServerHandler() {}
+private:
+	virtual void recvMemory(Socket *socket, Memory &memory);
+	virtual bool check2CRLF(Memory &memory);
+public:
 	virtual void threadStep(Socket *socket);
 	virtual void internalStep(HttpRequest &request, HttpResponse &response);
 	virtual void step(HttpRequest &request, HttpResponse &response);

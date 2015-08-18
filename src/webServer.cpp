@@ -18,7 +18,7 @@ RequestHeader::RequestHeader() {
 
 }
 
-bool RequestHeader::parse(Memory request) {
+bool RequestHeader::parse(Memory &request) {
 	isFileFlag = false;
 	clear();
 
@@ -75,9 +75,12 @@ bool RequestHeader::parse(Memory request) {
 	while (true) {
 		pos1 = request.getPos();
 		pos2 = find(request, ":");
-		if (pos2 < 0) break;
+		if (pos2 < 0) {
+			request.setPos(pos1);
+			int pos3 = find(request, "\r\n");
+			break;
+		}
 		int pos3 = find(request, "\r\n");
-//		int pos4 = find(request, "\r\n");
 
 		if (pos3 <= 0) break;
 		string name = substr(request, pos1, pos2 - pos1);
@@ -88,6 +91,7 @@ bool RequestHeader::parse(Memory request) {
 			parseParams(value, ptCOOKIE);
 		}
 	}
+	/******
 	if (method == "POST") {
 		pos1 = pos1 + 2;
 		sParams = substr(request, pos1, request.getSize() - pos1);
@@ -95,9 +99,20 @@ bool RequestHeader::parse(Memory request) {
 		string sDecode = sParams;
 		parseParams(sDecode, ptPOST);
 	}
+	*/
 
+	pos1 = request.getPos();
 	return true;
 }
+
+void RequestHeader::parsePOSTParams(Memory &memory) {
+	int pos = memory.getPos();
+	string sParams = substr(memory, pos, memory.getSize() - pos);
+	string sDecode = sParams;
+	parseParams(sDecode, ptPOST);
+}
+
+
 
 bool RequestHeader::parseParams(String sParams, ParamType pt) {
 	ParamList *params;
@@ -170,6 +185,7 @@ bool RequestHeader::parseParams(String sParams, ParamType pt) {
 
 	return true;
 }
+
 
 bool RequestHeader::isFile(string s, string &fileExt) {
 	int pos = s.find_last_of('.');
@@ -306,34 +322,49 @@ string RequestHeader::htmlEntitiesDecode(string s) {
 
 void HttpRequest::parse() {
 	LOGGER_TRACE("Start parse");
-	String s = "";
-	int size = memory.getSize();
-//	s.setLength(size);
-//	s = (char*)(memory.data);
-	int t1 = 0;//GetTickCount();
-	//printf("tick1 = %d\n", t1);
-	/*
-	for (int i = 0; i < size; i++) {
-		char ch;
-		memory.readChar(ch);
-		s = s + ch;
-	}
-	*/
-	int t2 = 0;//GetTickCount();
-	//printf("tick2 = %d %d\n", t2, t2 - t1);
-	//header.parse(s);
+
 	memory.setPos(0);
 	header.parse(memory);
 
-	int t3 = 0;//GetTickCount();
-	//printf("tick3 = %d %d\n", t3, t3 - t2);
 	LOGGER_TRACE("Finish parse");
 }
+
 
 
 //--------------------------------------------------------------------------------------------------
 //----------          class WebServerHandler          ----------------------------------------------
 //--------------------------------------------------------------------------------------------------
+void WebServerHandler::recvMemory(Socket *socket, Memory &memory) {
+	while (true) {
+		int len = socket->recv(memory);
+		if (len <= 0) break;
+	}
+}
+
+bool WebServerHandler::check2CRLF(Memory &memory) {
+	int pos = memory.getPos();
+	int posEnd = memory.getSize();
+	int step = 0;
+	while (true) {
+		if (pos >= posEnd) 
+			return false;
+
+		char u = *(((char*)memory.data) + pos);
+		printf("%c", u);
+		if (step == 0 && u == '\015')
+			step++;
+		else if (step == 1 && u == '\012')
+			step++;
+		else if (step == 2 && u == '\015')
+			step++;
+		else if (step == 3 && u == '\012') {
+			pos++;
+			return true;
+		}
+		pos++;
+	}
+}
+
 void WebServerHandler::threadStep(Socket *socket) {
 	try {
 		LOGGER_OUT("MUTEX", "application->g_mutex.lock(); {");
@@ -344,43 +375,20 @@ void WebServerHandler::threadStep(Socket *socket) {
 		response.memory.setPos(0);
 		response.memory.setSize(0);
 
-		int posStart = 0, posCur = 0;
-		Memory temp;
 		application->g_mutex.unlock();
 
 		while (true) {
+			while (true) {
+				application->g_mutex.lock();
+				recvMemory(socket, request.memory);
+				bool flag = check2CRLF(request.memory);
+				application->g_mutex.unlock();
+				if (flag) break;
+				usleep(1000);
+			}
+
 			application->g_mutex.lock();
-			//// recvAll {
-			while (true) {
-				int len = socket->recv(temp);
-				if (len == 0) break;
-				if (len < 0) {
-					if (errno != EAGAIN) break;
-				}
-			}
-			//// }
 
-			int step = 0;
-			while (true) {
-				int pos = temp.getPos();
-				if (posCur > pos) break;
-
-				char u = *(((char*)temp.data) + posCur);
-				request.memory.writeChar(u);
-				if (step == 0 && u == '\015') 
-					step++;
-				else if (step == 1 && u == '\012') 
-					step++;
-				else if (step == 2 && u == '\015') 
-					step++;
-				else if (step == 3 && u == '\012') {
-					posCur++;
-					break;
-				}
-				posCur++;
-			}
-
-			
 			printf("----------\n");
 			string s = "";
 			int count = request.memory.getSize();
@@ -391,11 +399,34 @@ void WebServerHandler::threadStep(Socket *socket) {
 			printf("----------\n");
 			LOGGER_OUT("HTML", s);
 			printf("\n");
+
 			request.parse();
+			int pos = request.memory.getPos();
+			String method = request.header.getValue("Method");
+			int conLen = request.header.getValue("Content-Length").toInt();
 			application->g_mutex.unlock();
+
+			if (conLen > 0) {
+				while (true) {
+					application->g_mutex.lock();
+					recvMemory(socket, request.memory);
+					int size = request.memory.getSize();
+					int delta = size - pos;
+					application->g_mutex.unlock();
+					if (delta >= conLen) break;
+					usleep(1000);
+				}
+				application->g_mutex.lock();
+				if (method == "POST")
+					request.header.parsePOSTParams(request.memory);
+				application->g_mutex.unlock();
+			}
+
 			LOGGER_OUT("MUTEX", "application->g_mutex.unlock();");
 
 			internalStep(request, response);
+
+
 
 			printf("8\n");
 			LOGGER_OUT("MUTEX", "application->g_mutex.lock(); {");
@@ -500,7 +531,6 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 	s = "HTTP/1.1 200 OK\r\nContent-Length: " + to_string(s.length()) + "\r\n\r\n" + s + "\r\n";
 	response.memory.write((void*)(s.c_str()), s.length());
 }
-
 
 
 //--------------------------------------------------------------------------------------------------

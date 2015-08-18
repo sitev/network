@@ -98,10 +98,10 @@ int Socket::recv(Memory &memory) {
 	int size = this->getCurSize();
 	if (size <= 0) return size;
 
-	int pos = memory.getPos();
+	int pos = memory.getSize();
 	memory.setSize(size + pos);
 	this->recv(((char*)memory.data) + pos, size);
-	memory.setPos(pos + size);
+	//memory.setPos(pos + size);
 	return size;
 }
 
