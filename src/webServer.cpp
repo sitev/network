@@ -309,8 +309,25 @@ string RequestHeader::decodeHtmlTags(string s, string tag, string dst) {
 }
 
 string RequestHeader::htmlEntitiesDecode(string s) {
+	s = decodeHtmlTags(s, "&lt!--", "<!--");
 	s = decodeHtmlTags(s, "&ltp&gt", "<p>");
+	s = decodeHtmlTags(s, "&ltb&gt", "<b>");
+	s = decodeHtmlTags(s, "&ltblockquote&gt", "<blockquote>");
+	s = decodeHtmlTags(s, "&ltstrong&gt", "<strong>");
+	s = decodeHtmlTags(s, "&ltspan&gt", "<span>");
+	s = decodeHtmlTags(s, "&ltul&gt", "<ul>");
+	s = decodeHtmlTags(s, "&ltli&gt", "<li>");
+
+	s = decodeHtmlTags(s, "-->&gt", "-->");
 	s = decodeHtmlTags(s, "&lt/p&gt", "</p>");
+	s = decodeHtmlTags(s, "&lt/b&gt", "</b>");
+	s = decodeHtmlTags(s, "&lt/blockquote&gt", "</blockquote>");
+	s = decodeHtmlTags(s, "&lt/strong&gt", "</strong>");
+	s = decodeHtmlTags(s, "&lt/span&gt", "</span>");
+	s = decodeHtmlTags(s, "&lt/ul&gt", "</ul>");
+	s = decodeHtmlTags(s, "&lt/li&gt", "</li>");
+
+	s = decodeHtmlTags(s, "&guot", "\"");
 	return s;
 }
 
