@@ -2,7 +2,8 @@
 
 #include "cj.h"
 
-//#include <sys/epoll.h>
+//#define LOCALHOST "sitev.ru"
+#define LOCALHOST "board3"
 
 namespace cj {
 
