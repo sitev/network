@@ -2,8 +2,8 @@
 
 #include "cj.h"
 
-//#define LOCALHOST "sitev.ru"
-#define LOCALHOST "board3"
+#define LOCALHOST "sitev.ru"
+//#define LOCALHOST "board3"
 
 namespace cj {
 
