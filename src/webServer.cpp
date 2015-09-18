@@ -125,7 +125,7 @@ bool RequestHeader::parseParams(String sParams, ParamType pt) {
 	params->clear();
 	if (sParams == "") return true;
 
-	string s = sParams.toString8();
+	string s = sParams.to_string();
 
 	int pos = 0;
 	string tmp = s.substr(pos, 1);
@@ -443,13 +443,9 @@ void WebServerHandler::threadStep(Socket *socket) {
 
 			internalStep(request, response);
 
-
-
-			printf("8\n");
 			LOGGER_OUT("MUTEX", "application->g_mutex.lock(); {");
 			application->g_mutex.lock();
 			LOGGER_OUT("MUTEX", "application->g_mutex.lock(); }");
-			printf("9\n");
 			if (socket->sendAll(response.memory)) LOGGER_TRACE("sendAll OK!"); else LOGGER_TRACE("sendAll error ...");
 			application->g_mutex.unlock();
 
@@ -458,19 +454,15 @@ void WebServerHandler::threadStep(Socket *socket) {
 
 		socket->close();
 		delete socket;
-		printf("10\n");
 		//application->g_mutex.unlock();
 	}
 	catch(...) {
 		LOGGER_ERROR("Error in threadStep try catch");
 	}
-
-	printf("11\n");
-
 }
 
 void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response) {
-	string host = request.header.getValue("Host").toString8();
+	string host = request.header.getValue("Host").to_string();
 	if (host == "127.0.0.1:8080") host = LOCALHOST;
 
 	if (!request.header.isFileFlag && isPageExist(host))
@@ -542,7 +534,7 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 	for (int i = 0; i < count; i++) {
 		String name = request.header.GET.getName(i);
 		String value = request.header.GET.getValue(i);
-		s = s + name.toString8() + " = " + value.toString8() + "\r\n";
+		s = s + name.to_string() + " = " + value.to_string() + "\r\n";
 	}
 
 	s = "HTTP/1.1 200 OK\r\nContent-Length: " + to_string(s.length()) + "\r\n\r\n" + s + "\r\n";

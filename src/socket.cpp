@@ -108,7 +108,7 @@ int Socket::recv(Memory &memory) {
 int Socket::send(String s) {
 	if (!isValid()) return 0;
 //	int len = ::send(m_sock, s.toChars(), s.getLength(), 0);
-	int len = send((void*)s.toString8().c_str(), s.getLength());
+	int len = send((void*)s.to_string().c_str(), s.getLength());
 	return len;
 }
 
@@ -377,7 +377,7 @@ bool ClientSocket::connect(String host, int port) {
 
 	int status = 0;
 #ifdef OS_LINUX
-	status = inet_pton(AF_INET, host.toString8().c_str(), &m_addr.sin_addr);
+	status = inet_pton(AF_INET, host.to_string().c_str(), &m_addr.sin_addr);
 #endif
 
 //	if (errno == EAFNOSUPPORT)
