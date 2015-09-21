@@ -2,7 +2,7 @@
 
 #include "cj.h"
 
-#define LOCALHOST "kjfijfi.sitev.ru"
+#define LOCALHOST "sitev.ru"
 
 namespace cj {
 
