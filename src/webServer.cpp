@@ -465,9 +465,34 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 	string host = request.header.getValue("Host").to_string();
 	if (host == "127.0.0.1:8080") host = LOCALHOST;
 
-	if (!request.header.isFileFlag && isPageExist(host))
+	if (!request.header.isFileFlag)
 	{
-		step(request, response);
+		bool flagSiteExist = isSiteExist(host);
+		bool flagPageExist = isPageExist(host);
+		if (!flagSiteExist || !flagPageExist) {
+			string fn;
+			if (!flagSiteExist) fn = "/var/www/common/404site_tpl.html";
+			else fn = "/var/www/common/404page_tpl.html";
+			File *f = new File(fn, "rb");
+			bool flag = f->isOpen();
+			if (flag) {
+				string version = request.header.getValue_s("Version");
+				printf("version = %s\n", version.c_str());
+				string s = "HTTP/" + version + " 404 Not Found\r\nContent-Type: text/html";
+				int sz = f->getSize();
+				s = s + "\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=100\r\nContent-Length: " + to_string(sz) + "\r\n\r\n";
+				response.memory.write((void*)(s.c_str()), s.length());
+
+				Memory mem;
+				mem.setSize(sz);
+				f->read(mem.data, sz);
+				response.memory.write(mem.data, sz);
+			}
+			delete f;
+		}
+		else {
+			step(request, response);
+		}
 	}
 	else {
 		string fn1 = request.header.getValue_s("Params");

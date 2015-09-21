@@ -2,7 +2,7 @@
 
 #include "cj.h"
 
-#define LOCALHOST "sitev.ru"
+#define LOCALHOST "kjfijfi.sitev.ru"
 
 namespace cj {
 
@@ -63,6 +63,7 @@ public:
 	virtual void threadStep(Socket *socket);
 	virtual void internalStep(HttpRequest &request, HttpResponse &response);
 	virtual void step(HttpRequest &request, HttpResponse &response);
+	virtual bool isSiteExist(string host) { return true; }
 	virtual bool isPageExist(string host) { return false; }
 };
 
