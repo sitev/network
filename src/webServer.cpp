@@ -321,6 +321,7 @@ string RequestHeader::htmlEntitiesDecode(string s) {
 	s = decodeHtmlTags(s, "&lth", "<h");
 	s = decodeHtmlTags(s, "&ltu", "<u");
 	s = decodeHtmlTags(s, "&ltfont", "<font");
+	s = decodeHtmlTags(s, "&ltdiv", "<div");
 	s = decodeHtmlTags(s, "&ltbr", "<br");
 
 	s = decodeHtmlTags(s, "-->&gt", "-->");
@@ -336,6 +337,7 @@ string RequestHeader::htmlEntitiesDecode(string s) {
 	s = decodeHtmlTags(s, "&lt/h", "</h");
 	s = decodeHtmlTags(s, "&lt/u", "</u");
 	s = decodeHtmlTags(s, "&lt/font", "</font");
+	s = decodeHtmlTags(s, "&lt/div", "</div");
 
 	s = decodeHtmlTags(s, "&guot", "\"");
 	s = decodeHtmlTags(s, "&gt", ">");
