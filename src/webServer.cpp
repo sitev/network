@@ -87,6 +87,7 @@ bool RequestHeader::parse(Memory &request) {
 		string value = substr(request, pos2 + 2, pos3 - pos2 - 2);
 		add(name, value);
 
+
 		if (name == "Cookie") {
 			parseParams(value, ptCOOKIE);
 		}
@@ -176,6 +177,9 @@ bool RequestHeader::parseParams(String sParams, ParamType pt) {
 		}
 		else if (path[pos] == '=') {
 			mode = 2;
+		}
+		else if (path[pos] == ' ') {
+			//null
 		}
 		else {
 			if (mode == 1) name += path[pos]; else value += path[pos];
