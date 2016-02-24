@@ -315,8 +315,9 @@ string RequestHeader::decodeHtmlTags(string s, string tag, string dst) {
 string RequestHeader::htmlEntitiesDecode(string s) {
 	s = decodeHtmlTags(s, "&lt!--", "<!--");
 	s = decodeHtmlTags(s, "&ltp&gt", "<p>");
-	s = decodeHtmlTags(s, "&ltb&gt", "<b>");
-	s = decodeHtmlTags(s, "&lti&gt", "<i>");
+	s = decodeHtmlTags(s, "&ltb", "<b");
+	s = decodeHtmlTags(s, "&lta", "<a");
+	s = decodeHtmlTags(s, "&lti", "<i");
 	s = decodeHtmlTags(s, "&ltblockquote&gt", "<blockquote>");
 	s = decodeHtmlTags(s, "&ltstrong&gt", "<strong>");
 	s = decodeHtmlTags(s, "&ltspan", "<span");
@@ -324,14 +325,19 @@ string RequestHeader::htmlEntitiesDecode(string s) {
 	s = decodeHtmlTags(s, "&lte", "<e");
 	s = decodeHtmlTags(s, "&lth", "<h");
 	s = decodeHtmlTags(s, "&ltu", "<u");
+	s = decodeHtmlTags(s, "&lto", "<o");
 	s = decodeHtmlTags(s, "&ltfont", "<font");
 	s = decodeHtmlTags(s, "&ltdiv", "<div");
+	s = decodeHtmlTags(s, "&ltt", "<t");
+	s = decodeHtmlTags(s, "&ltc", "<c");
+
 	s = decodeHtmlTags(s, "&ltbr", "<br");
 
 	s = decodeHtmlTags(s, "-->&gt", "-->");
 	s = decodeHtmlTags(s, "&lt/p&gt", "</p>");
-	s = decodeHtmlTags(s, "&lt/b&gt", "</b>");
-	s = decodeHtmlTags(s, "&lt/i&gt", "</i>");
+	s = decodeHtmlTags(s, "&lt/b", "</b");
+	s = decodeHtmlTags(s, "&lt/a", "</a");
+	s = decodeHtmlTags(s, "&lt/i", "</i");
 	s = decodeHtmlTags(s, "&lt/blockquote&gt", "</blockquote>");
 	s = decodeHtmlTags(s, "&lt/strong&gt", "</strong>");
 	s = decodeHtmlTags(s, "&lt/span&gt", "</span>");
@@ -340,8 +346,11 @@ string RequestHeader::htmlEntitiesDecode(string s) {
 	s = decodeHtmlTags(s, "&lt/e", "</e");
 	s = decodeHtmlTags(s, "&lt/h", "</h");
 	s = decodeHtmlTags(s, "&lt/u", "</u");
+	s = decodeHtmlTags(s, "&lt/o", "</o");
 	s = decodeHtmlTags(s, "&lt/font", "</font");
 	s = decodeHtmlTags(s, "&lt/div", "</div");
+	s = decodeHtmlTags(s, "&lt/t", "</t");
+	s = decodeHtmlTags(s, "&lt/c", "</c");
 
 	s = decodeHtmlTags(s, "&guot", "\"");
 	s = decodeHtmlTags(s, "&gt", ">");
