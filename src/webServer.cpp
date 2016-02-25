@@ -585,9 +585,9 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 	s = s + to_string(count) + "\r\n";
 
 	for (int i = 0; i < count; i++) {
-		String name = request.header.GET.getName(i);
-		String value = request.header.GET.getValue(i);
-		s = s + name.to_string() + " = " + value.to_string() + "\r\n";
+		string name = request.header.GET.getName(i).to_string();
+		string value = request.header.GET.getValue(i).to_string();
+		s = s + name + " = " + value + "\r\n";
 	}
 
 	s = "HTTP/1.1 200 OK\r\nContent-Length: " + to_string(s.length()) + "\r\n\r\n" + s + "\r\n";

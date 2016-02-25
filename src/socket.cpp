@@ -23,6 +23,23 @@ Socket::Socket(SOCKET sock) {
 
 void Socket::init() {
 	memset(&m_addr, 0, sizeof(m_addr));
+
+#ifdef OS_WINDOWS
+	// Initialize Winsock
+	WSADATA wsaData;
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0) {
+		printf("WSAStartup failed with error: %d\n", iResult);
+	}
+
+	//for IPv6
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+#endif
+
 	fNonBlocking = false;
 	error = false;
 	sendRequest = false;
@@ -106,6 +123,7 @@ int Socket::recv(Memory &memory) {
 }
 
 int Socket::send(String s) {
+	string ss = s.to_string();
 	if (!isValid()) return 0;
 //	int len = ::send(m_sock, s.toChars(), s.getLength(), 0);
 	int len = send((void*)s.to_string().c_str(), s.getLength());
@@ -356,7 +374,7 @@ void Socket::close() {
  }
  */
 
-ClientSocket::ClientSocket() {
+ClientSocket::ClientSocket() : Socket() {
 
 }
 
@@ -373,6 +391,7 @@ bool ClientSocket::connect(String host, int port) {
 		return false;
 
 	m_addr.sin_family = AF_INET;
+	m_addr.sin_addr.S_un.S_addr = inet_addr(host.to_string().c_str());
 	m_addr.sin_port = htons(port);
 
 	int status = 0;

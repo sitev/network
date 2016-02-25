@@ -16,7 +16,11 @@ class Socket : public Object {
 public:
 	SOCKET m_sock;
 protected:
-	sockaddr_in m_addr;
+	sockaddr_in m_addr; //old model for Windows è Linux
+#ifdef OS_WINDOWS
+	addrinfo *result = NULL, *ptr = NULL, hints; // new model for IPv6
+#endif
+
 	bool fNonBlocking, error, sendRequest;
 public:
 	Socket();

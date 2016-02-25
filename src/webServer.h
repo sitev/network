@@ -64,7 +64,7 @@ public:
 	virtual void internalStep(HttpRequest &request, HttpResponse &response);
 	virtual void step(HttpRequest &request, HttpResponse &response);
 	virtual bool isSiteExist(string host) { return true; }
-	virtual bool isPageExist(string host) { return false; }
+	virtual bool isPageExist(string host) { return true; }
 };
 
 class WebServer : public Application {
