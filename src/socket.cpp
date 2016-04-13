@@ -25,11 +25,17 @@ void Socket::init() {
 	memset(&m_addr, 0, sizeof(m_addr));
 
 #ifdef OS_WINDOWS
-	// Initialize Winsock
-	WSADATA wsaData;
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != 0) {
-		printf("WSAStartup failed with error: %d\n", iResult);
+
+	static bool flag = true;
+
+	if (flag) {
+		// Initialize Winsock
+		WSADATA wsaData;
+		int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		if (iResult != 0) {
+			printf("WSAStartup failed with error: %d\n", iResult);
+		}
+		flag = false;
 	}
 
 	//for IPv6
@@ -96,6 +102,8 @@ int Socket::recv(String &s) {
 
 int Socket::recv(void *buffer, int size) {
 	if (!isValid()) return 0;
+	if (buffer == NULL)
+		return 0;
 	memset(buffer, 0, size);
 	int len = 0;
 	if (fNonBlocking) {
@@ -122,6 +130,21 @@ int Socket::recv(Memory &memory) {
 	return size;
 }
 
+int Socket::recv(Memory &memory, int size) {
+	if (size < 0)
+		return -1;
+	int sz = this->getCurSize();
+	if (sz <= 0) return sz;
+	if (sz < size) return 0;
+
+	int pos = memory.getSize();
+	memory.setSize(size + pos);
+	this->recv(((char*)memory.data) + pos, size);
+	//memory.setPos(pos + size);
+	return size;
+}
+
+
 int Socket::send(String s) {
 	string ss = s.to_string();
 	if (!isValid()) return 0;
@@ -147,7 +170,7 @@ bool Socket::sendAll(void *buffer, int size) {
 	char *ptr = (char*) buffer;
 
 	int counter = 0, pause = 1000;
-	int calcSize = 1024, calcStep = 1;
+	int calcSize = 4096 /*8192*/, calcStep = 1;
 	int flagcnt = 0;
 
 	while (size > 0)
@@ -164,7 +187,7 @@ bool Socket::sendAll(void *buffer, int size) {
 			else sz = ::send(m_sock, ptr, size, 0);
 #endif
 
-			LOGGER_OUT("OUT", "size = " + (String)size + " retSize = " + (String)sz);
+			//LOGGER_OUT("OUT", "size = " + (String)size + " retSize = " + (String)sz);
 
 			usleep(pause);
 		}
@@ -173,20 +196,27 @@ bool Socket::sendAll(void *buffer, int size) {
 			continue;
 		}
 		if (sz < 0) {
+			/*
 			int err = errno;
 			LOGGER_ERROR("error = " + (String)err);
-			if (errno != 11) return false;
+			if (err !=  0 && err != EAGAIN && err != EWOULDBLOCK) return false;
+			*/
+			int err = WSAGetLastError();
+			if (err != WSAEWOULDBLOCK) {  // currently no data available
+				return false;
+			}
 		}
 		if (sz < 1) {
+			usleep(1000000);
 			calcSize = 1;
 			calcStep = 1;
 			counter++;
-			if (counter > 10000) return false;
+			if (counter > 1000000) return false;
 			continue;
 		}
 		calcStep = calcStep * 2;
 		calcSize = (calcSize + sz) / 2 + calcStep;
-		if (calcSize > 1024) calcSize = 1024;
+		if (calcSize > 4096) calcSize = 4096;
 		if (calcSize < 0) calcSize = 0;
 
 		ptr += sz;
@@ -510,11 +540,17 @@ bool ServerSocket::accept() {
 	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
 #endif
 	if (new_sock <= 0) return false;
-
+	
+	int count = lstSocket.getCount();
+	for (int i = 0; i < count; i++) {
+		Socket *sck = (Socket*)lstSocket.getItem(i);
+		if (sck->m_sock == new_sock) return false;
+	}
+	
 	Socket *sock = new Socket(new_sock);
 	sock->setNonBlocking(this->fNonBlocking);
 	lstSocket.add(sock);
-	LOGGER_TRACE("Socket added ...");
+	//LOGGER_TRACE("Socket added ...");
 	return true;
 }
 void ServerSocket::setNonBlocking(bool b) {

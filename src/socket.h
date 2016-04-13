@@ -9,18 +9,18 @@ namespace cj {
 #endif
 
 const int MAXHOSTNAME = 200;
-const int MAXCONNECTIONS = 100;
-const int MAXRECV = 1024;
+const int MAXCONNECTIONS = 500;
+const int MAXRECV = 4096;// 8192;
 
 class Socket : public Object {
 public:
 	SOCKET m_sock;
+	int ticks = 0;
 protected:
 	sockaddr_in m_addr; //old model for Windows è Linux
 #ifdef OS_WINDOWS
 	addrinfo *result = NULL, *ptr = NULL, hints; // new model for IPv6
 #endif
-
 	bool fNonBlocking, error, sendRequest;
 public:
 	Socket();
@@ -34,6 +34,8 @@ public:
 	virtual int recv(String &s);
 	virtual int recv(void *buffer, int size);
 	virtual int recv(Memory &memory);
+	virtual int recv(Memory &memory, int size);
+
 	virtual int send(String s);
 	virtual int send(void *buffer, int size);
 	virtual int send(Memory &memory);
