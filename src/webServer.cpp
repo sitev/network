@@ -379,10 +379,20 @@ void HttpRequest::parse() {
 //--------------------------------------------------------------------------------------------------
 //----------          class WebServerHandler          ----------------------------------------------
 //--------------------------------------------------------------------------------------------------
+WebServerHandler::WebServerHandler(WebServer *webServer) {
+	this->webServer = webServer;
+}
+
 void WebServerHandler::recvMemory(Socket *socket, Memory &memory) {
 	while (true) {
-		int len = socket->recv(memory);
-		if (len <= 0) break;
+		try {
+			int len = socket->recv(memory);
+			if (len <= 0) break;
+		}
+		catch (...) {
+			int len = socket->recv(memory);
+			if (len <= 0) break;
+		}
 	}
 }
 
@@ -572,6 +582,15 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 }
 
 void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
+	if (webServer != NULL) {
+		if (webServer->onStep != NULL) {
+			webServer->onStep(request, response);
+			//string s = "hello123";
+			//s = "HTTP/1.1 200 OK\r\nContent-Length: " + to_string(s.length()) + "\r\n\r\n" + s + "\r\n";
+			//response.memory.write((void*)(s.c_str()), s.length());
+			return;
+		}
+	}
 	int count = request.header.getCount();
 
 	string s = "";
@@ -594,7 +613,6 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 	response.memory.write((void*)(s.c_str()), s.length());
 }
 
-
 //--------------------------------------------------------------------------------------------------
 //----------          class WebServer          -----------------------------------------------------
 //--------------------------------------------------------------------------------------------------
@@ -602,14 +620,13 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 WebServer::WebServer(int port) {
 	ss = new cj::ServerSocket();
 	socketPort = port;
+	printf("create WebServer, port = %d\n", port);
 }
-
-mutex g_mutex1;
 
 void WebServer::threadFunction(Socket *socket)
 {
 	g_mutex1.lock();
-	WebServerHandler *handler = new WebServerHandler();
+	WebServerHandler *handler = new WebServerHandler(this);
 	cout << "new " << handler << endl;
 	g_mutex1.unlock();
 
@@ -619,6 +636,60 @@ void WebServer::threadFunction(Socket *socket)
 	cout << "del " << handler << endl;
 	delete handler;
 	g_mutex1.unlock();
+}
+
+void WebServer::init() {
+	isRunning = true;
+	bool flag = ss->create(AF_INET, SOCK_STREAM, 0);
+	if (!flag)
+	{
+		exit(1);
+	}
+	if (!ss->bind(socketPort))
+	{
+		exit(2);
+	}
+
+	ss->setNonBlocking(true);
+	ss->listen();
+
+	printf("webserver init\n");
+
+}
+
+void WebServer::step() {
+	if (isRunning) {
+		ss->accept();
+
+		int index = 0;
+		int count = ss->lstSocket.getCount();
+
+		//if (mycnt % 1000 == 0) {
+		//	String s = "Accept. Count = " + (String)count;
+		//	LOGGER_DEBUG(s);
+		//}
+
+		for (int i = 0; i < count; i++) {
+			Socket *socket = (Socket*)ss->lstSocket.getItem(index);
+			index++;
+
+			int size = socket->getCurSize();
+			//				LOGGER_OUT("SIZE", "Size of Socket buffer = " + (String)size);
+
+			if (size > 0) {
+				index--;
+				ss->lstSocket.del(index);
+
+				LOGGER_DEBUG("----- i = " + (String)i + " size = " + (String)size);
+
+				//std::thread *thr = new std::thread(&WebServer::threadStep, this, socket);
+				std::thread *thr = new std::thread(&WebServer::threadFunction, this, socket);
+				thr->detach();
+				//lstThread.push_back(thr);
+			}
+		}
+		usleep(1000);
+	}
 }
 
 void WebServer::run() {

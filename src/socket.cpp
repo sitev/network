@@ -196,15 +196,18 @@ bool Socket::sendAll(void *buffer, int size) {
 			continue;
 		}
 		if (sz < 0) {
-			/*
+
+#ifdef OS_LINUX
 			int err = errno;
 			LOGGER_ERROR("error = " + (String)err);
 			if (err !=  0 && err != EAGAIN && err != EWOULDBLOCK) return false;
-			*/
+#endif
+#ifdef OS_WINDOWS
 			int err = WSAGetLastError();
 			if (err != WSAEWOULDBLOCK) {  // currently no data available
 				return false;
 			}
+#endif
 		}
 		if (sz < 1) {
 			usleep(1000000);
@@ -421,7 +424,9 @@ bool ClientSocket::connect(String host, int port) {
 		return false;
 
 	m_addr.sin_family = AF_INET;
+#ifdef OS_WINDOWS
 	m_addr.sin_addr.S_un.S_addr = inet_addr(host.to_string().c_str());
+#endif
 	m_addr.sin_port = htons(port);
 
 	int status = 0;

@@ -50,12 +50,17 @@ public:
 
 };
 
+typedef std::function< void(HttpRequest &request, HttpResponse &response) > StepEvent;
+
+class WebServer;
+
 class WebServerHandler : public Object {
 protected:
 	HttpRequest request;
 	HttpResponse response;
+	WebServer *webServer = NULL;
 public:
-	WebServerHandler() {}
+	WebServerHandler(WebServer *webServer);
 private:
 	virtual void recvMemory(Socket *socket, Memory &memory);
 	virtual bool check2CRLF(Memory &memory);
@@ -69,6 +74,7 @@ public:
 
 class WebServer : public Application {
 protected:
+	mutex g_mutex1;
 	WebServerHandler *handler;
 public:
 
@@ -78,8 +84,12 @@ public:
 //	struct epoll_event event;
 //	struct epoll_event *events;
 
+	StepEvent onStep;
+
 	WebServer(int port = 80);
 	virtual ~WebServer() {}
+	virtual void init();
+	virtual void step();
 	virtual void run();
 	virtual void setHandler(WebServerHandler *handler);
 	virtual void threadStep(Socket *socket);
