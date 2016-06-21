@@ -36,13 +36,13 @@ bool RequestHeader::parse(Memory &request) {
 	int savePos = request.getPos();
 	string httpstr = " HTTP/1.1\r\n";
 	int pos2 = find(request, httpstr);
-	printf("pos1 = %d, pos2 = %d\n", pos1, pos2);
+	LOGGER_SCREEN("pos1 = %d, pos2 = %d", pos1, pos2);
 	if (pos2 <= pos1) {
-		printf("pos2 <= pos1\n");
+		LOGGER_SCREEN("pos2 <= pos1");
 		request.setPos(savePos);
 		httpstr = " HTTP/1.0\r\n";
 		pos2 = find(request, httpstr);
-		printf("pos1 = %d, pos2 = %d\n", pos1, pos2);
+		LOGGER_SCREEN("pos1 = %d, pos2 = %d", pos1, pos2);
 		if (pos2 <= pos1) return false;
 		add("Version", (string)"1.0");
 		LOGGER_OUT("Version", "Version = 1.0");
@@ -405,7 +405,7 @@ bool WebServerHandler::check2CRLF(Memory &memory) {
 			return false;
 
 		char u = *(((char*)memory.data) + pos);
-		printf("%c", u);
+		//printf("%c", u);
 		if (step == 0 && u == '\015')
 			step++;
 		else if (step == 1 && u == '\012')
@@ -444,16 +444,15 @@ void WebServerHandler::threadStep(Socket *socket) {
 
 			application->g_mutex.lock();
 
-			printf("----------\n");
+			LOGGER_SCREEN("----------");
 			string s = "";
 			int count = request.memory.getSize();
 			for (int i = 0; i < count; i++) {
-				printf("%c", ((char*)request.memory.data)[i]);
+				LOGGER_SCREEN("%c", ((char*)request.memory.data)[i]);
 				s = s + ((char*)request.memory.data)[i];
 			}
-			printf("----------\n");
+			LOGGER_SCREEN("----------");
 			LOGGER_OUT("HTML", s);
-			printf("\n");
 
 			request.parse();
 			int pos = request.memory.getPos();
@@ -515,7 +514,7 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 			bool flag = f->isOpen();
 			if (flag) {
 				string version = request.header.getValue_s("Version");
-				printf("version = %s\n", version.c_str());
+				LOGGER_SCREEN("version = %s", version.c_str());
 				string s = "HTTP/" + version + " 404 Not Found\r\nContent-Type: text/html";
 				int sz = f->getSize();
 				s = s + "\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=100\r\nContent-Length: " + to_string(sz) + "\r\n\r\n";
@@ -545,12 +544,12 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 			fn = "/var/www/common/" + fn1;
 		}
 
-		printf("filename = %s\n", fn.c_str());
+		LOGGER_SCREEN("filename = %s", fn.c_str());
 		File *f = new File(fn, "rb");
 		bool flag = f->isOpen();
 		if (flag) {
 			string version = request.header.getValue_s("Version");
-			printf("version = %s\n", version.c_str());
+			LOGGER_SCREEN("version = %s", version.c_str());
 			string s = "HTTP/" + version + " 200 OK\r\nContent-Type: ";
 			if (request.header.fileExt == "html") s = s + "text/html";
 			else if (request.header.fileExt == "ico") s = s + "image/ico";
@@ -620,7 +619,7 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 WebServer::WebServer(int port) {
 	ss = new cj::ServerSocket();
 	socketPort = port;
-	printf("create WebServer, port = %d\n", port);
+	LOGGER_SCREEN("create WebServer, port = %d", port);
 }
 
 void WebServer::threadFunction(Socket *socket)
@@ -653,7 +652,7 @@ void WebServer::init() {
 	ss->setNonBlocking(true);
 	ss->listen();
 
-	printf("webserver init\n");
+	LOGGER_SCREEN("webserver init");
 
 }
 

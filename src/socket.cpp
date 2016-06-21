@@ -156,7 +156,7 @@ int Socket::send(String s) {
 int Socket::send(void *buffer, int size) {
 	if (!isValid()) return 0;
 	int len = ::send(m_sock, (char*)buffer, size, 0);
-	printf(" send %d\n", len);
+	//printf(" send %d\n", len);
 	if (len == -1) error = true;
 	return len;
 }
