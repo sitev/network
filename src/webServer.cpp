@@ -36,13 +36,13 @@ bool RequestHeader::parse(Memory &request) {
 	int savePos = request.getPos();
 	string httpstr = " HTTP/1.1\r\n";
 	int pos2 = find(request, httpstr);
-	LOGGER_SCREEN("pos1 = %d, pos2 = %d", pos1, pos2);
+	LOGGER_SCREEN("pos1 = " + (String)pos1 + " pos2 = " + (String)pos2);
 	if (pos2 <= pos1) {
 		LOGGER_SCREEN("pos2 <= pos1");
 		request.setPos(savePos);
 		httpstr = " HTTP/1.0\r\n";
 		pos2 = find(request, httpstr);
-		LOGGER_SCREEN("pos1 = %d, pos2 = %d", pos1, pos2);
+		LOGGER_SCREEN("pos1 = " + (String)pos1 + " pos2 = " + (String)pos2);
 		if (pos2 <= pos1) return false;
 		add("Version", (string)"1.0");
 		LOGGER_OUT("Version", "Version = 1.0");
@@ -448,7 +448,7 @@ void WebServerHandler::threadStep(Socket *socket) {
 			string s = "";
 			int count = request.memory.getSize();
 			for (int i = 0; i < count; i++) {
-				LOGGER_SCREEN("%c", ((char*)request.memory.data)[i]);
+				LOGGER_SCREEN("%c" + (String)((char*)request.memory.data)[i]);
 				s = s + ((char*)request.memory.data)[i];
 			}
 			LOGGER_SCREEN("----------");
@@ -514,7 +514,7 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 			bool flag = f->isOpen();
 			if (flag) {
 				string version = request.header.getValue_s("Version");
-				LOGGER_SCREEN("version = %s", version.c_str());
+				LOGGER_SCREEN("version = " + version);
 				string s = "HTTP/" + version + " 404 Not Found\r\nContent-Type: text/html";
 				int sz = f->getSize();
 				s = s + "\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5, max=100\r\nContent-Length: " + to_string(sz) + "\r\n\r\n";
@@ -549,7 +549,7 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 		bool flag = f->isOpen();
 		if (flag) {
 			string version = request.header.getValue_s("Version");
-			LOGGER_SCREEN("version = %s", version.c_str());
+			LOGGER_SCREEN("version = " + version);
 			string s = "HTTP/" + version + " 200 OK\r\nContent-Type: ";
 			if (request.header.fileExt == "html") s = s + "text/html";
 			else if (request.header.fileExt == "ico") s = s + "image/ico";
@@ -619,7 +619,7 @@ void WebServerHandler::step(HttpRequest &request, HttpResponse &response) {
 WebServer::WebServer(int port) {
 	ss = new cj::ServerSocket();
 	socketPort = port;
-	LOGGER_SCREEN("create WebServer, port = %d", port);
+	LOGGER_SCREEN("create WebServer, port = " + (String)port);
 }
 
 void WebServer::threadFunction(Socket *socket)
