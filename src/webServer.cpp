@@ -544,7 +544,7 @@ void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response
 			fn = "/var/www/common/" + fn1;
 		}
 
-		LOGGER_SCREEN("filename = %s", fn.c_str());
+		LOGGER_SCREEN("filename = " + fn);
 		File *f = new File(fn, "rb");
 		bool flag = f->isOpen();
 		if (flag) {
