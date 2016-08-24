@@ -448,7 +448,7 @@ void WebServerHandler::threadStep(Socket *socket) {
 			string s = "";
 			int count = request.memory.getSize();
 			for (int i = 0; i < count; i++) {
-				LOGGER_SCREEN("%c" + (String)((char*)request.memory.data)[i]);
+               // LOGGER_SCREEN("%c");
 				s = s + ((char*)request.memory.data)[i];
 			}
 			LOGGER_SCREEN("----------");

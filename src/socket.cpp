@@ -545,7 +545,8 @@ bool ServerSocket::accept() {
 	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
 #endif
 	if (new_sock <= 0) return false;
-	
+	printf("accept TRUE\n");
+
 	int count = lstSocket.getCount();
 	for (int i = 0; i < count; i++) {
 		Socket *sck = (Socket*)lstSocket.getItem(i);
