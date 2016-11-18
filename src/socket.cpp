@@ -146,7 +146,6 @@ int Socket::recv(Memory &memory, int size) {
 
 
 int Socket::send(String s) {
-	string ss = s.to_string();
 	if (!isValid()) return 0;
 //	int len = ::send(m_sock, s.toChars(), s.getLength(), 0);
 	int len = send((void*)s.to_string().c_str(), s.getLength());
@@ -210,11 +209,10 @@ bool Socket::sendAll(void *buffer, int size) {
 #endif
 		}
 		if (sz < 1) {
-			usleep(1000000);
 			calcSize = 1;
 			calcStep = 1;
 			counter++;
-			if (counter > 1000000) return false;
+			if (counter > 10000) return false;
 			continue;
 		}
 		calcStep = calcStep * 2;
