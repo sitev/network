@@ -500,7 +500,7 @@ void WebServerHandler::threadStep(Socket *socket) {
 
 void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response) {
 	string host = request.header.getValue("Host").to_string();
-	if (host == "127.0.0.1:8080") host = LOCALHOST;
+	//if (host == "127.0.0.1:8080") host = LOCALHOST;
 
 	if (!request.header.isFileFlag)
 	{
