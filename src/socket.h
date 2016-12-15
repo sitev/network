@@ -82,6 +82,7 @@ public:
 	virtual bool listen();
 	virtual bool listen(int connCount);
 	virtual bool accept();
+	virtual Socket* acceptLight();
 	virtual void setNonBlocking(bool);
 };
 

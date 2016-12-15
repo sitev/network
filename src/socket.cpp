@@ -4,10 +4,6 @@
 
 namespace cj {
 
-//#pragma comment ( lib, "ws2_32.lib" )  // добавил сам стротроку. т.к не находил библиотеку без этой строки хоть в консоли и прописывал "ws2_2.lib"
-//#include <stdio.h>
-//#include <windows.h>
-
 //--------------------------------------------------------------------------------------------------
 //----------          Socket         ---------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
@@ -536,27 +532,42 @@ bool ServerSocket::listen(int connCount) {
 
 bool ServerSocket::accept() {
 	int addr_length = sizeof(m_addr);
-#ifdef OS_LINUX
-	int new_sock = ::accept(m_sock, (sockaddr *) &m_addr, (socklen_t *) &addr_length);
-#endif
 #ifdef OS_WINDOWS
 	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
 #endif
+#ifdef OS_LINUX
+	int new_sock = ::accept(m_sock, (sockaddr *) &m_addr, (socklen_t *) &addr_length);
+#endif
 	if (new_sock <= 0) return false;
-	printf("accept TRUE\n");
-
+	/*===
 	int count = lstSocket.getCount();
 	for (int i = 0; i < count; i++) {
 		Socket *sck = (Socket*)lstSocket.getItem(i);
-		if (sck->m_sock == new_sock) return false;
+		if (sck->m_sock == new_sock) 
+			return false;
 	}
-	
+	*/
 	Socket *sock = new Socket(new_sock);
 	sock->setNonBlocking(this->fNonBlocking);
 	lstSocket.add(sock);
 	//LOGGER_TRACE("Socket added ...");
 	return true;
 }
+
+Socket* ServerSocket::acceptLight() {
+	int addr_length = sizeof(m_addr);
+#ifdef OS_WINDOWS
+	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
+#endif
+#ifdef OS_LINUX
+	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, (socklen_t *)&addr_length);
+#endif
+	if (new_sock <= 0) return 0;
+	Socket *sock = new Socket(new_sock);
+	sock->setNonBlocking(this->fNonBlocking);
+	return sock;
+}
+
 void ServerSocket::setNonBlocking(bool b) {
 	Socket::setNonBlocking(b);
 }

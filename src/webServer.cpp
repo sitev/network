@@ -379,8 +379,7 @@ void HttpRequest::parse() {
 //--------------------------------------------------------------------------------------------------
 //----------          class WebServerHandler          ----------------------------------------------
 //--------------------------------------------------------------------------------------------------
-WebServerHandler::WebServerHandler(WebServer *webServer) {
-	this->webServer = webServer;
+WebServerHandler::WebServerHandler(WebServer *webServer) : AbstractWebServerHandler(webServer) {
 }
 
 void WebServerHandler::recvMemory(Socket *socket, Memory &memory) {
@@ -443,16 +442,6 @@ void WebServerHandler::threadStep(Socket *socket) {
 			}
 
 			application->g_mutex.lock();
-
-			LOGGER_SCREEN("----------");
-			string s = "";
-			int count = request.memory.getSize();
-			for (int i = 0; i < count; i++) {
-               // LOGGER_SCREEN("%c");
-				s = s + ((char*)request.memory.data)[i];
-			}
-			LOGGER_SCREEN("----------");
-			LOGGER_OUT("HTML", s);
 
 			request.parse();
 			int pos = request.memory.getPos();
@@ -624,17 +613,17 @@ WebServer::WebServer(int port) {
 
 void WebServer::threadFunction(Socket *socket)
 {
-	g_mutex1.lock();
+	//g_mutex1.lock();
 	WebServerHandler *handler = new WebServerHandler(this);
-	cout << "new " << handler << endl;
-	g_mutex1.unlock();
+//	cout << "new " << handler << endl;
+	//g_mutex1.unlock();
 
 	handler->threadStep(socket);
 
-	g_mutex1.lock();
-	cout << "del " << handler << endl;
+	//g_mutex1.lock();
+//	cout << "del " << handler << endl;
 	delete handler;
-	g_mutex1.unlock();
+	//g_mutex1.unlock();
 }
 
 void WebServer::init() {
@@ -657,23 +646,18 @@ void WebServer::init() {
 }
 
 void WebServer::step() {
+	printf("1\n");
 	if (isRunning) {
 		ss->accept();
 
 		int index = 0;
 		int count = ss->lstSocket.getCount();
 
-		//if (mycnt % 1000 == 0) {
-		//	String s = "Accept. Count = " + (String)count;
-		//	LOGGER_DEBUG(s);
-		//}
-
 		for (int i = 0; i < count; i++) {
 			Socket *socket = (Socket*)ss->lstSocket.getItem(index);
 			index++;
 
 			int size = socket->getCurSize();
-			//				LOGGER_OUT("SIZE", "Size of Socket buffer = " + (String)size);
 
 			if (size > 0) {
 				index--;
@@ -742,6 +726,33 @@ void WebServer::run() {
 				}
 			}
 			usleep(1000);
+		}
+	}
+	catch (...) {
+		printf("Error in run() try catch(...)\n");
+	}
+}
+
+void WebServer::runLight() {
+	try {
+		isRunning = true;
+		bool flag = ss->create(AF_INET, SOCK_STREAM, 0);
+		if (!flag) exit(1);
+		if (!ss->bind(socketPort)) exit(2);
+
+		ss->setNonBlocking(true);
+		ss->listen();
+
+		while (isRunning) {
+			Socket *socket = ss->acceptLight();
+			if (socket) {
+				int size = socket->getCurSize();
+				if (size > 0) {
+					std::thread *thr = new std::thread(&WebServer::threadFunction, this, socket);
+					thr->detach();
+				}
+			}
+			//usleep(100);
 		}
 	}
 	catch (...) {

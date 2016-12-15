@@ -54,14 +54,23 @@ typedef std::function< void(HttpRequest &request, HttpResponse &response) > Step
 
 class WebServer;
 
-class WebServerHandler : public Object {
+class AbstractWebServerHandler : public Object {
+protected:
+	WebServer *webServer = NULL;
+public:
+	AbstractWebServerHandler(WebServer *webServer) {
+		this->webServer = webServer;
+	}
+	virtual void threadStep(Socket *socket) = 0;
+};
+
+class WebServerHandler : public AbstractWebServerHandler {
 protected:
 	HttpRequest request;
 	HttpResponse response;
-	WebServer *webServer = NULL;
 public:
 	WebServerHandler(WebServer *webServer);
-private:
+protected:
 	virtual void recvMemory(Socket *socket, Memory &memory);
 	virtual bool check2CRLF(Memory &memory);
 public:
@@ -91,6 +100,7 @@ public:
 	virtual void init();
 	virtual void step();
 	virtual void run();
+	virtual void runLight();
 	virtual void setHandler(WebServerHandler *handler);
 	virtual void threadStep(Socket *socket);
 	virtual void threadFunction(Socket *socket);
