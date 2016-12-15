@@ -48,7 +48,7 @@ namespace cj {
 			char *buff = buf;
 			int i = 0;
 			memcpy((void*)buf, s1, len1); i += len1;
-			memcpy((void*)&buf[i], sl, len0);   i += len0;
+			memcpy((void*)&buf[i], sl, lenl);   i += lenl;
 			memcpy((void*)&buf[i], s2, len2); i += len2;
 			memcpy((void*)&buf[i], s0, len0);   i += len0;
 			memcpy((void*)&buf[i], s3, len3); i += len3;

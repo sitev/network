@@ -746,10 +746,13 @@ void WebServer::runLight() {
 		while (isRunning) {
 			Socket *socket = ss->acceptLight();
 			if (socket) {
-				int size = socket->getCurSize();
-				if (size > 0) {
-					std::thread *thr = new std::thread(&WebServer::threadFunction, this, socket);
-					thr->detach();
+				for (int i = 0; i < 1000000; i++) {
+					int size = socket->getCurSize();
+					if (size > 0) {
+						std::thread *thr = new std::thread(&WebServer::threadFunction, this, socket);
+						thr->detach();
+						break;
+					}
 				}
 			}
 			//usleep(100);

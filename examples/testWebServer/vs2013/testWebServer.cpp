@@ -13,7 +13,7 @@ int main()
 {
 	MyWebServer *ws = new MyWebServer(8080);
 	application = ws;
-	ws->run();
+	ws->runLight();
 
 	return 0;
 }
