@@ -1,282 +1,280 @@
 #include "cjNetwork.h"
 
-#include <errno.h>
-
 namespace cj {
 
 //--------------------------------------------------------------------------------------------------
 //----------          Socket         ---------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
 Socket::Socket() {
-	m_sock = -1;
-	init();
+    m_sock = -1;
+    init();
 }
 
 Socket::Socket(SOCKET sock) {
-	m_sock = sock;
-	init();
+    m_sock = sock;
+    init();
 }
 
 void Socket::init() {
-	memset(&m_addr, 0, sizeof(m_addr));
+    memset(&m_addr, 0, sizeof(m_addr));
 
 #ifdef OS_WINDOWS
 
-	static bool flag = true;
+    static bool flag = true;
 
-	if (flag) {
-		// Initialize Winsock
-		WSADATA wsaData;
-		int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (iResult != 0) {
-			printf("WSAStartup failed with error: %d\n", iResult);
-		}
-		flag = false;
-	}
+    if (flag) {
+        // Initialize Winsock
+        WSADATA wsaData;
+        int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (iResult != 0) {
+            printf("WSAStartup failed with error: %d\n", iResult);
+        }
+        flag = false;
+    }
 
-	//for IPv6
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
+    //for IPv6
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
 
 #endif
 
-	fNonBlocking = false;
-	error = false;
-	sendRequest = false;
+    fNonBlocking = false;
+    error = false;
+    sendRequest = false;
 }
 
 Socket::~Socket() {
-	if (isValid()) {
+    if (isValid()) {
 #ifdef OS_LINUX
-		::close(m_sock);
+        ::close(m_sock);
 #endif
-		m_sock = -1;
-	}
+        m_sock = -1;
+    }
 }
 
 bool Socket::create() {
-	m_sock = socket(AF_INET, SOCK_STREAM, 0);
-	bool flag = isValid();
-	if (flag) {
-		int on = 1;
+    m_sock = socket(AF_INET, SOCK_STREAM, 0);
+    bool flag = isValid();
+    if (flag) {
+        int on = 1;
 #ifdef OS_LINUX
-		flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
+        flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
 #endif
-	}
-	return flag;
+    }
+    return flag;
 }
 
 bool Socket::create(int domain, int type, int protocol) {
-	m_sock = socket(domain, type, protocol);
-	bool flag = isValid();
-	if (flag) {
-		int on = 1;
+    m_sock = socket(domain, type, protocol);
+    bool flag = isValid();
+    if (flag) {
+        int on = 1;
 #ifdef OS_LINUX
-		flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
+        flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
 #endif
-	}
-	return flag;
+    }
+    return flag;
 }
 
 int Socket::getCurSize() {
-	if (!isValid()) return 0;
-	int len;
-	char buf[MAXRECV];
-	len = ::recv(m_sock, buf, MAXRECV, MSG_PEEK);
-	return len;
+    if (!isValid()) return 0;
+    int len;
+    char buf[MAXRECV];
+    len = ::recv(m_sock, buf, MAXRECV, MSG_PEEK);
+    return len;
 }
 int Socket::recv(String &s) {
-	if (!isValid()) return 0;
-	char buf[MAXRECV + 1];
-	memset(buf, 0, MAXRECV + 1);
-	int len = ::recv(m_sock, buf, MAXRECV, 0);
-	s = buf;
-	return len;
+    if (!isValid()) return 0;
+    char buf[MAXRECV + 1];
+    memset(buf, 0, MAXRECV + 1);
+    int len = ::recv(m_sock, buf, MAXRECV, 0);
+    s = buf;
+    return len;
 }
 
 int Socket::recv(void *buffer, int size) {
-	if (!isValid()) return 0;
-	if (buffer == NULL)
-		return 0;
-	memset(buffer, 0, size);
-	int len = 0;
-	if (fNonBlocking) {
+    if (!isValid()) return 0;
+    if (buffer == NULL)
+        return 0;
+    memset(buffer, 0, size);
+    int len = 0;
+    if (fNonBlocking) {
 //#ifdef OS_LINUX
-		len = ::recv(m_sock, (char*)buffer, size, 0 /*MSG_DONTWAIT*/);
+        len = ::recv(m_sock, (char*)buffer, size, 0 /*MSG_DONTWAIT*/);
 //#endif
-	}
-	else {
+    }
+    else {
 //#ifdef OS_LINUX1
-		len = ::recv(m_sock, (char*)buffer, size, 0);
+        len = ::recv(m_sock, (char*)buffer, size, 0);
 //#endif
-	}
-	return len;
+    }
+    return len;
 }
 
 int Socket::recv(Memory &memory) {
-	int size = this->getCurSize();
-	if (size <= 0) return size;
+    int size = this->getCurSize();
+    if (size <= 0) return size;
 
-	int pos = memory.getSize();
-	memory.setSize(size + pos);
-	this->recv(((char*)memory.data) + pos, size);
-	//memory.setPos(pos + size);
-	return size;
+    int pos = memory.getSize();
+    memory.setSize(size + pos);
+    this->recv(((char*)memory.data) + pos, size);
+    //memory.setPos(pos + size);
+    return size;
 }
 
 int Socket::recv(Memory &memory, int size) {
-	if (size < 0)
-		return -1;
-	int sz = this->getCurSize();
-	if (sz <= 0) return sz;
-	if (sz < size) return 0;
+    if (size < 0)
+        return -1;
+    int sz = this->getCurSize();
+    if (sz <= 0) return sz;
+    if (sz < size) return 0;
 
-	int pos = memory.getSize();
-	memory.setSize(size + pos);
-	this->recv(((char*)memory.data) + pos, size);
-	//memory.setPos(pos + size);
-	return size;
+    int pos = memory.getSize();
+    memory.setSize(size + pos);
+    this->recv(((char*)memory.data) + pos, size);
+    //memory.setPos(pos + size);
+    return size;
 }
 
 
 int Socket::send(String s) {
-	if (!isValid()) return 0;
+    if (!isValid()) return 0;
 //	int len = ::send(m_sock, s.toChars(), s.getLength(), 0);
-	int len = send((void*)s.to_string().c_str(), s.getLength());
-	return len;
+    int len = send((void*)s.to_string().c_str(), s.getLength());
+    return len;
 }
 
 int Socket::send(void *buffer, int size) {
-	if (!isValid()) return 0;
-	int len = ::send(m_sock, (char*)buffer, size, 0);
-	//printf(" send %d\n", len);
-	if (len == -1) error = true;
-	return len;
+    if (!isValid()) return 0;
+    int len = ::send(m_sock, (char*)buffer, size, 0);
+    //printf(" send %d\n", len);
+    if (len == -1) error = true;
+    return len;
 }
 
 int Socket::send(Memory &memory) {
-	return this->send(memory.data, memory.getSize());
+    return this->send(memory.data, memory.getSize());
 }
 
 bool Socket::sendAll(void *buffer, int size) {
-	if (!isValid()) return 0;
-	char *ptr = (char*) buffer;
+    if (!isValid()) return 0;
+    char *ptr = (char*) buffer;
 
-	int counter = 0, pause = 1000;
-	int calcSize = 4096 /*8192*/, calcStep = 1;
-	int flagcnt = 0;
+    int counter = 0, pause = 1000;
+    int calcSize = 4096 /*8192*/, calcStep = 1;
+    int flagcnt = 0;
 
-	while (size > 0)
-	{
-		flagcnt++;
-		int sz;
-		try {
+    while (size > 0)
+    {
+        flagcnt++;
+        int sz;
+        try {
 #ifdef OS_LINUX
-			if (size > calcSize) sz = ::send(m_sock, ptr, calcSize, MSG_NOSIGNAL);
-			else sz = ::send(m_sock, ptr, size, MSG_NOSIGNAL);
+            if (size > calcSize) sz = ::send(m_sock, ptr, calcSize, MSG_NOSIGNAL);
+            else sz = ::send(m_sock, ptr, size, MSG_NOSIGNAL);
 #endif
 #ifdef OS_WINDOWS
-			if (size > calcSize) sz = ::send(m_sock, ptr, calcSize, 0);
-			else sz = ::send(m_sock, ptr, size, 0);
+            if (size > calcSize) sz = ::send(m_sock, ptr, calcSize, 0);
+            else sz = ::send(m_sock, ptr, size, 0);
 #endif
 
-			//LOGGER_OUT("OUT", "size = " + (String)size + " retSize = " + (String)sz);
+            //LOGGER_OUT("OUT", "size = " + (String)size + " retSize = " + (String)sz);
 
-			usleep(pause);
-		}
-		catch(...) {
-			usleep(pause);
-			continue;
-		}
-		if (sz < 0) {
+            usleep(pause);
+        }
+        catch(...) {
+            usleep(pause);
+            continue;
+        }
+        if (sz < 0) {
 
 #ifdef OS_LINUX
-			int err = errno;
-			LOGGER_ERROR("error = " + (String)err);
-			if (err !=  0 && err != EAGAIN && err != EWOULDBLOCK) return false;
+            int err = errno;
+            LOGGER_ERROR("error = " + (String)err);
+            if (err !=  0 && err != EAGAIN && err != EWOULDBLOCK) return false;
 #endif
 #ifdef OS_WINDOWS
-			int err = WSAGetLastError();
-			if (err != WSAEWOULDBLOCK) {  // currently no data available
-				return false;
-			}
+            int err = WSAGetLastError();
+            if (err != WSAEWOULDBLOCK) {  // currently no data available
+                return false;
+            }
 #endif
-		}
-		if (sz < 1) {
-			calcSize = 1;
-			calcStep = 1;
-			counter++;
-			if (counter > 10000) return false;
-			continue;
-		}
-		calcStep = calcStep * 2;
-		calcSize = (calcSize + sz) / 2 + calcStep;
-		if (calcSize > 4096) calcSize = 4096;
-		if (calcSize < 0) calcSize = 0;
+        }
+        if (sz < 1) {
+            calcSize = 1;
+            calcStep = 1;
+            counter++;
+            if (counter > 10000) return false;
+            continue;
+        }
+        calcStep = calcStep * 2;
+        calcSize = (calcSize + sz) / 2 + calcStep;
+        if (calcSize > 4096) calcSize = 4096;
+        if (calcSize < 0) calcSize = 0;
 
-		ptr += sz;
-		size -= sz;
-	}
-	return true;
+        ptr += sz;
+        size -= sz;
+    }
+    return true;
 }
 
 bool Socket::sendAll(Memory &memory) {
-	return this->sendAll(memory.data, memory.getSize());
+    return this->sendAll(memory.data, memory.getSize());
 }
 
 void Socket::setNonBlocking(bool b) {
-	if (!isValid()) return;
-	fNonBlocking = b;
+    if (!isValid()) return;
+    fNonBlocking = b;
 
-	int opts = 0;
+    int opts = 0;
 #ifdef OS_LINUX
-	opts = fcntl(m_sock, F_GETFL);
+    opts = fcntl(m_sock, F_GETFL);
 #endif
-	if (opts < 0) return;
+    if (opts < 0) return;
 
 #ifdef OS_LINUX
-	if (b)
-		opts = (opts | O_NONBLOCK);
-	else
-		opts = (opts & ~O_NONBLOCK);
+    if (b)
+        opts = (opts | O_NONBLOCK);
+    else
+        opts = (opts & ~O_NONBLOCK);
 
-	fcntl(m_sock, F_SETFL, opts);
-	//fcntl(m_sock, F_SETFL, O_NONBLOCK);
+    fcntl(m_sock, F_SETFL, opts);
+    //fcntl(m_sock, F_SETFL, O_NONBLOCK);
 #endif
 
 #ifdef OS_WINDOWS
-	u_long iMode = fNonBlocking;
-	ioctlsocket(m_sock, FIONBIO, &iMode);
+    u_long iMode = fNonBlocking;
+    ioctlsocket(m_sock, FIONBIO, &iMode);
 #endif
 }
 bool Socket::isValid() {
-	return m_sock != -1;
+    return m_sock != -1;
 }
 bool Socket::isError() {
-	return error;
+    return error;
 }
 void Socket::setError(bool error) {
-	this->error = error;
+    this->error = error;
 }
 bool Socket::getSendRequest() {
-	return sendRequest;
+    return sendRequest;
 }
 void Socket::setSendRequest(bool value) {
-	sendRequest = value;
+    sendRequest = value;
 }
 
 void Socket::close() {
-	if (isValid()) {
+    if (isValid()) {
 #ifdef OS_LINUX
-		::close(m_sock);
+        ::close(m_sock);
 #endif
 #ifdef OS_WINDOWS
-		::closesocket(m_sock);
+        ::closesocket(m_sock);
 #endif
-		m_sock = -1;
-	}
+        m_sock = -1;
+    }
 }
 
 
@@ -414,29 +412,29 @@ ClientSocket::~ClientSocket() {
 }
 
 bool ClientSocket::connect(String host, int port) {
-	if (!isValid())
-		return false;
+    if (!isValid())
+        return false;
 
-	m_addr.sin_family = AF_INET;
+    m_addr.sin_family = AF_INET;
 #ifdef OS_WINDOWS
-	m_addr.sin_addr.S_un.S_addr = inet_addr(host.to_string().c_str());
+    m_addr.sin_addr.S_un.S_addr = inet_addr(host.to_string().c_str());
 #endif
-	m_addr.sin_port = htons(port);
+    m_addr.sin_port = htons(port);
 
-	int status = 0;
+    int status = 0;
 #ifdef OS_LINUX
-	status = inet_pton(AF_INET, host.to_string().c_str(), &m_addr.sin_addr);
+    status = inet_pton(AF_INET, host.to_string().c_str(), &m_addr.sin_addr);
 #endif
 
 //	if (errno == EAFNOSUPPORT)
 //		return false;
 
-	status = ::connect(m_sock, (sockaddr *) &m_addr, sizeof(m_addr));
+    status = ::connect(m_sock, (sockaddr *) &m_addr, sizeof(m_addr));
 
-	if (status == 0)
-		return true;
-	else
-		return false;
+    if (status == 0)
+        return true;
+    else
+        return false;
 }
 
 
@@ -466,110 +464,110 @@ ServerSocket::~ServerSocket() {
 
 bool ServerSocket::create() {
 #ifdef OS_WINDOWS
-	WSADATA wsaData;
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != NO_ERROR) {
-		wprintf(L"Error at WSAStartup()\n");
-		return 1;
-	}
+    WSADATA wsaData;
+    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (iResult != NO_ERROR) {
+        wprintf(L"Error at WSAStartup()\n");
+        return 1;
+    }
 #endif
-	m_sock = socket(AF_INET, SOCK_STREAM, 0);
-	bool flag = isValid();
-	if (flag) {
-		int on = 1;
+    m_sock = socket(AF_INET, SOCK_STREAM, 0);
+    bool flag = isValid();
+    if (flag) {
+        int on = 1;
 #ifdef OS_LINUX
-		flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
+        flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
 #endif
-	}
-	return flag;
+    }
+    return flag;
 }
 
 bool ServerSocket::create(int domain, int type, int protocol) {
 #ifdef OS_WINDOWS
-	WSADATA wsaData;
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != NO_ERROR) {
-		wprintf(L"Error at WSAStartup()\n");
-		return 1;
-	}
+    WSADATA wsaData;
+    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (iResult != NO_ERROR) {
+        wprintf(L"Error at WSAStartup()\n");
+        return 1;
+    }
 #endif
-	m_sock = socket(domain, type, protocol);
-	bool flag = isValid();
-	if (flag) {
-		int on = 1;
+    m_sock = socket(domain, type, protocol);
+    bool flag = isValid();
+    if (flag) {
+        int on = 1;
 #ifdef OS_LINUX
-		flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
+        flag = (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == 0);
 #endif
-	}
-	return flag;
+    }
+    return flag;
 }
 
 bool ServerSocket::bind(int port) {
-	return bind(port, AF_INET, INADDR_ANY);
+    return bind(port, AF_INET, INADDR_ANY);
 }
 
 bool ServerSocket::bind(int port, ushort family, uint addr) {
-	if (!isValid()) return false;
+    if (!isValid()) return false;
 
-	m_addr.sin_port = htons(port);
-	m_addr.sin_family = family;
-	m_addr.sin_addr.s_addr = htonl(addr);
+    m_addr.sin_port = htons(port);
+    m_addr.sin_family = family;
+    m_addr.sin_addr.s_addr = htonl(addr);
 
-	int result = ::bind(m_sock, (struct sockaddr*) &m_addr, sizeof(m_addr));
+    int result = ::bind(m_sock, (struct sockaddr*) &m_addr, sizeof(m_addr));
 //	int err1 = errno;
-	return result >= 0;
+    return result >= 0;
 }
 
 bool ServerSocket::listen() {
-	return listen(MAXCONNECTIONS);
+    return listen(MAXCONNECTIONS);
 }
 
 bool ServerSocket::listen(int connCount) {
-	if (!isValid()) return false;
-	int result = ::listen(m_sock, connCount);//MAXCONNECTIONS);
-	return result >= 0;
+    if (!isValid()) return false;
+    int result = ::listen(m_sock, connCount);//MAXCONNECTIONS);
+    return result >= 0;
 }
 
 bool ServerSocket::accept() {
-	int addr_length = sizeof(m_addr);
+    int addr_length = sizeof(m_addr);
 #ifdef OS_WINDOWS
-	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
+    int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
 #endif
 #ifdef OS_LINUX
-	int new_sock = ::accept(m_sock, (sockaddr *) &m_addr, (socklen_t *) &addr_length);
+    int new_sock = ::accept(m_sock, (sockaddr *) &m_addr, (socklen_t *) &addr_length);
 #endif
-	if (new_sock <= 0) return false;
-	/*===
-	int count = lstSocket.getCount();
-	for (int i = 0; i < count; i++) {
-		Socket *sck = (Socket*)lstSocket.getItem(i);
-		if (sck->m_sock == new_sock) 
-			return false;
-	}
-	*/
-	Socket *sock = new Socket(new_sock);
-	sock->setNonBlocking(this->fNonBlocking);
-	lstSocket.add(sock);
-	//LOGGER_TRACE("Socket added ...");
-	return true;
+    if (new_sock <= 0) return false;
+    /*===
+    int count = lstSocket.getCount();
+    for (int i = 0; i < count; i++) {
+        Socket *sck = (Socket*)lstSocket.getItem(i);
+        if (sck->m_sock == new_sock)
+            return false;
+    }
+    */
+    Socket *sock = new Socket(new_sock);
+    sock->setNonBlocking(this->fNonBlocking);
+    lstSocket.add(sock);
+    //LOGGER_TRACE("Socket added ...");
+    return true;
 }
 
 Socket* ServerSocket::acceptLight() {
-	int addr_length = sizeof(m_addr);
+    int addr_length = sizeof(m_addr);
 #ifdef OS_WINDOWS
-	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
+    int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
 #endif
 #ifdef OS_LINUX
-	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, (socklen_t *)&addr_length);
+    int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, (socklen_t *)&addr_length);
 #endif
-	if (new_sock <= 0) return 0;
-	Socket *sock = new Socket(new_sock);
-	sock->setNonBlocking(this->fNonBlocking);
-	return sock;
+    if (new_sock <= 0) return 0;
+    Socket *sock = new Socket(new_sock);
+    sock->setNonBlocking(this->fNonBlocking);
+    return sock;
 }
 
 void ServerSocket::setNonBlocking(bool b) {
-	Socket::setNonBlocking(b);
+    Socket::setNonBlocking(b);
 }
 
 }
