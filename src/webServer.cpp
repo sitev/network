@@ -646,7 +646,6 @@ void WebServer::init() {
 }
 
 void WebServer::step() {
-	printf("1\n");
 	if (isRunning) {
 		ss->accept();
 

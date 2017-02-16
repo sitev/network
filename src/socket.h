@@ -34,7 +34,9 @@ public:
 	virtual int recv(String &s);
 	virtual int recv(void *buffer, int size);
 	virtual int recv(Memory &memory);
+	virtual int Socket::recv_new(Memory &memory);
 	virtual int recv(Memory &memory, int size);
+	virtual int recv_new(Memory &memory, int size1);
 
 	virtual int send(String s);
 	virtual int send(void *buffer, int size);

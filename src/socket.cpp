@@ -140,6 +140,34 @@ int Socket::recv(Memory &memory, int size) {
 	return size;
 }
 
+int Socket::recv_new(Memory &memory) {
+	int size1 = this->getCurSize();
+	if (size1 <= 0) return size1;
+
+	int pos = memory.getPos();
+	int size = memory.getSize();
+	int delta = pos + size1 - size;
+	if (delta > 0) memory.setSize(pos + size1);
+	this->recv(((char*)memory.data) + pos, size1);
+	return size1;
+}
+
+
+int Socket::recv_new(Memory &memory, int size1) {
+	if (size1 < 0)
+		return -1;
+	int sz = this->getCurSize();
+	if (sz <= 0) return sz;
+	if (sz < size1) return 0;
+
+	int pos = memory.getPos();
+	int size = memory.getSize();
+	int delta = pos + size1 - size;
+	if (delta > 0) memory.setSize(pos + size1);
+	this->recv(((char*)memory.data) + pos, size1);
+	return size1;
+}
+
 
 int Socket::send(String s) {
 	if (!isValid()) return 0;
@@ -539,14 +567,6 @@ bool ServerSocket::accept() {
 	int new_sock = ::accept(m_sock, (sockaddr *) &m_addr, (socklen_t *) &addr_length);
 #endif
 	if (new_sock <= 0) return false;
-	/*===
-	int count = lstSocket.getCount();
-	for (int i = 0; i < count; i++) {
-		Socket *sck = (Socket*)lstSocket.getItem(i);
-		if (sck->m_sock == new_sock) 
-			return false;
-	}
-	*/
 	Socket *sock = new Socket(new_sock);
 	sock->setNonBlocking(this->fNonBlocking);
 	lstSocket.add(sock);
@@ -562,9 +582,10 @@ Socket* ServerSocket::acceptLight() {
 #ifdef OS_LINUX
 	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, (socklen_t *)&addr_length);
 #endif
-	if (new_sock <= 0) return 0;
+	if (new_sock <= 0) return NULL;
 	Socket *sock = new Socket(new_sock);
 	sock->setNonBlocking(this->fNonBlocking);
+	lstSocket.add(sock);
 	return sock;
 }
 
