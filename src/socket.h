@@ -42,6 +42,7 @@ public:
 	virtual int send(void *buffer, int size);
 	virtual int send(Memory &memory);
 
+	static bool sendAll(SOCKET sock, void *buffer, int size);
 	virtual bool sendAll(void *buffer, int size);
 	virtual bool sendAll(Memory &memory);
 

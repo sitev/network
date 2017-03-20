@@ -52,6 +52,9 @@ Socket::~Socket() {
 #ifdef OS_LINUX
 		::close(m_sock);
 #endif
+#ifdef OS_WINDOWS
+		::closesocket(m_sock);
+#endif
 		m_sock = -1;
 	}
 }
@@ -188,7 +191,70 @@ int Socket::send(Memory &memory) {
 	return this->send(memory.data, memory.getSize());
 }
 
+bool Socket::sendAll(SOCKET sock, void *buffer, int size) {
+	if (sock <= 0) return 0;
+	char *ptr = (char*)buffer;
+
+	int counter = 0, pause = 1000;
+	int calcSize = 4096 /*8192*/, calcStep = 1;
+	int flagcnt = 0;
+
+	while (size > 0)
+	{
+		flagcnt++;
+		int sz;
+		try {
+#ifdef OS_LINUX
+			if (size > calcSize) sz = ::send(sock, ptr, calcSize, MSG_NOSIGNAL);
+			else sz = ::send(m_sock, ptr, size, MSG_NOSIGNAL);
+#endif
+#ifdef OS_WINDOWS
+			if (size > calcSize) sz = ::send(sock, ptr, calcSize, 0);
+			else sz = ::send(sock, ptr, size, 0);
+#endif
+		}
+		catch (...) {
+			usleep(pause);
+			continue;
+		}
+		if (sz < 0) {
+#ifdef OS_LINUX
+			int err = errno;
+			LOGGER_ERROR("error = " + (String)err);
+			if (err != 0 && err != EAGAIN && err != EWOULDBLOCK) return false;
+#endif
+#ifdef OS_WINDOWS
+			int err = WSAGetLastError();
+			if (err != WSAEWOULDBLOCK) {  // currently no data available
+				return false;
+			}
+#endif
+		}
+		if (sz < 1) {
+			usleep(pause);
+			//calcSize = 1;
+			//calcStep = 1;
+			counter++;
+			if (counter > 10000) return false;
+			continue;
+		}
+		/*
+		calcStep = calcStep * 2;
+		calcSize = (calcSize + sz) / 2 + calcStep;
+		if (calcSize > 4096) calcSize = 4096;
+		if (calcSize < 0) calcSize = 0;
+		*/
+		ptr += sz;
+		size -= sz;
+		if (size > 0) usleep(pause);
+	}
+	return true;
+}
+
+
 bool Socket::sendAll(void *buffer, int size) {
+	return Socket::sendAll(m_sock, buffer, size);
+
 	if (!isValid()) return 0;
 	char *ptr = (char*) buffer;
 
