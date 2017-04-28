@@ -15,7 +15,7 @@ const int MAXRECV = 4096;// 8192;
 class Socket : public Object {
 public:
 	SOCKET m_sock;
-	int ticks = 0;
+	//int ticks = 0;
 protected:
 	sockaddr_in m_addr; //old model for Windows è Linux
 #ifdef OS_WINDOWS
@@ -34,7 +34,7 @@ public:
 	virtual int recv(String &s);
 	virtual int recv(void *buffer, int size);
 	virtual int recv(Memory &memory);
-	virtual int Socket::recv_new(Memory &memory);
+	virtual int recv_new(Memory &memory);
 	virtual int recv(Memory &memory, int size);
 	virtual int recv_new(Memory &memory, int size1);
 
@@ -84,7 +84,7 @@ public:
 	virtual bool bind(int port, ushort family, uint addr);
 	virtual bool listen();
 	virtual bool listen(int connCount);
-	virtual bool accept();
+	virtual Socket* accept();
 	virtual Socket* acceptLight();
 	virtual void setNonBlocking(bool);
 };

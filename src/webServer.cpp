@@ -489,7 +489,7 @@ void WebServerHandler::threadStep(Socket *socket) {
 
 void WebServerHandler::internalStep(HttpRequest &request, HttpResponse &response) {
 	string host = request.header.getValue("Host").to_string();
-	//if (host == "127.0.0.1:8080") host = LOCALHOST;
+	if (host == "127.0.0.1:8080") host = LOCALHOST;
 
 	if (!request.header.isFileFlag)
 	{
@@ -611,8 +611,7 @@ WebServer::WebServer(int port) {
 	LOGGER_SCREEN("create WebServer, port = " + (String)port);
 }
 
-void WebServer::threadFunction(Socket *socket)
-{
+void WebServer::threadFunction(Socket *socket) {
 	//g_mutex1.lock();
 	WebServerHandler *handler = new WebServerHandler(this);
 //	cout << "new " << handler << endl;
@@ -629,12 +628,10 @@ void WebServer::threadFunction(Socket *socket)
 void WebServer::init() {
 	isRunning = true;
 	bool flag = ss->create(AF_INET, SOCK_STREAM, 0);
-	if (!flag)
-	{
+	if (!flag) {
 		exit(1);
 	}
-	if (!ss->bind(socketPort))
-	{
+	if (!ss->bind(socketPort)) {
 		exit(2);
 	}
 

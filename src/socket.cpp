@@ -192,7 +192,10 @@ int Socket::send(Memory &memory) {
 }
 
 bool Socket::sendAll(SOCKET sock, void *buffer, int size) {
-	if (sock <= 0) return 0;
+	if (sock <= 0) return false;
+
+	//cout << "size = " << size << ":";
+
 	char *ptr = (char*)buffer;
 
 	int counter = 0, pause = 1000;
@@ -202,11 +205,11 @@ bool Socket::sendAll(SOCKET sock, void *buffer, int size) {
 	while (size > 0)
 	{
 		flagcnt++;
-		int sz;
+		int sz = 0;
 		try {
 #ifdef OS_LINUX
 			if (size > calcSize) sz = ::send(sock, ptr, calcSize, MSG_NOSIGNAL);
-			else sz = ::send(m_sock, ptr, size, MSG_NOSIGNAL);
+			else sz = ::send(sock, ptr, size, MSG_NOSIGNAL);
 #endif
 #ifdef OS_WINDOWS
 			if (size > calcSize) sz = ::send(sock, ptr, calcSize, 0);
@@ -217,6 +220,7 @@ bool Socket::sendAll(SOCKET sock, void *buffer, int size) {
 			usleep(pause);
 			continue;
 		}
+		//cout << sz << "+";
 		if (sz < 0) {
 #ifdef OS_LINUX
 			int err = errno;
@@ -235,7 +239,8 @@ bool Socket::sendAll(SOCKET sock, void *buffer, int size) {
 			//calcSize = 1;
 			//calcStep = 1;
 			counter++;
-			if (counter > 10000) return false;
+			if (counter > 10000) 
+				return false;
 			continue;
 		}
 		/*
@@ -248,6 +253,7 @@ bool Socket::sendAll(SOCKET sock, void *buffer, int size) {
 		size -= sz;
 		if (size > 0) usleep(pause);
 	}
+	//cout << "." << counter << ".";
 	return true;
 }
 
@@ -623,7 +629,7 @@ bool ServerSocket::listen(int connCount) {
 	int result = ::listen(m_sock, connCount);//MAXCONNECTIONS);
 	return result >= 0;
 }
-
+/*
 bool ServerSocket::accept() {
 	int addr_length = sizeof(m_addr);
 #ifdef OS_WINDOWS
@@ -639,6 +645,23 @@ bool ServerSocket::accept() {
 	//LOGGER_TRACE("Socket added ...");
 	return true;
 }
+*/
+
+
+Socket* ServerSocket::accept() {
+	int addr_length = sizeof(m_addr);
+#ifdef OS_WINDOWS
+	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, &addr_length);
+#endif
+#ifdef OS_LINUX
+	int new_sock = ::accept(m_sock, (sockaddr *)&m_addr, (socklen_t *)&addr_length);
+#endif
+	if (new_sock <= 0) return NULL;
+	Socket *sock = new Socket(new_sock);
+	sock->setNonBlocking(this->fNonBlocking);
+	lstSocket.add(sock);
+	return sock;
+}
 
 Socket* ServerSocket::acceptLight() {
 	int addr_length = sizeof(m_addr);
@@ -651,7 +674,6 @@ Socket* ServerSocket::acceptLight() {
 	if (new_sock <= 0) return NULL;
 	Socket *sock = new Socket(new_sock);
 	sock->setNonBlocking(this->fNonBlocking);
-	lstSocket.add(sock);
 	return sock;
 }
 
