@@ -1,2 +1,2 @@
-# cjNetwork
-Набор классов для сетевого программирования: сокеты и вебсервер
+# network
+Crossplatform C++ network class library
