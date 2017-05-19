@@ -29,6 +29,7 @@ public:
 	virtual ~Socket();
 	virtual bool create();
 	virtual bool create(int domain, int type, int protocol);
+	virtual bool connect(Str host, int port);
 
 	virtual int getCurSize();
 	virtual int recv(String &s);

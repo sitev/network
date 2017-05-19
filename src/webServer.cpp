@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "cj.h"
-#include "cjNetwork.h"
+#include "network.h"
 #include <sys/stat.h>
 
 //#include <sys/epoll.h>

@@ -86,7 +86,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\cjNetwork.h" />
+    <ClInclude Include="..\..\src\network.h" />
     <ClInclude Include="..\..\src\socket.h" />
     <ClInclude Include="..\..\src\webServer.h" />
   </ItemGroup>

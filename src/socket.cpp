@@ -1,4 +1,4 @@
-#include "cjNetwork.h"
+#include "network.h"
 
 #include <errno.h>
 
@@ -81,6 +81,27 @@ bool Socket::create(int domain, int type, int protocol) {
 #endif
 	}
 	return flag;
+}
+
+bool Socket::connect(Str host, int port) {
+	if (!isValid())
+		return false;
+
+	m_addr.sin_family = AF_INET;
+	m_addr.sin_addr.S_un.S_addr = inet_addr(host.to_string().c_str());
+	m_addr.sin_port = htons(port);
+
+	int status = 0;
+#ifdef OS_LINUX
+	status = inet_pton(AF_INET, host.to_string().c_str(), &m_addr.sin_addr);
+#endif
+
+	status = ::connect(m_sock, (sockaddr *)&m_addr, sizeof(m_addr));
+
+	if (status == 0)
+		return true;
+	else
+		return false;
 }
 
 int Socket::getCurSize() {
