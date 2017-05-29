@@ -1,8 +1,9 @@
 #pragma once
 
 #include "cj.h"
+using namespace cj;
 
-namespace cj {
+namespace network {
 
 #ifdef OS_LINUX
 #define SOCKET int

@@ -2,7 +2,7 @@
 
 #include <ws2tcpip.h>
 
-namespace cj {
+namespace network {
 	Str getIpByHost(Str host) {
 		int status;
 		struct addrinfo hints;

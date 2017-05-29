@@ -1,5 +1,5 @@
 #pragma once
 
-namespace cj {
+namespace network {
 	Str getIpByHost(Str host);
 }
