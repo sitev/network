@@ -89,12 +89,10 @@
     <ClInclude Include="..\..\src\func.h" />
     <ClInclude Include="..\..\src\network.h" />
     <ClInclude Include="..\..\src\socket.h" />
-    <ClInclude Include="..\..\src\webServer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\func.cpp" />
     <ClCompile Include="..\..\src\socket.cpp" />
-    <ClCompile Include="..\..\src\webServer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
