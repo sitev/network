@@ -180,6 +180,7 @@ int Socket::recv_new(Memory &memory) {
 int Socket::recv_new(Memory &memory, int size1) {
 	if (size1 < 0)
 		return -1;
+
 	int sz = this->getCurSize();
 	if (sz <= 0) return sz;
 	if (sz < size1) return 0;
@@ -191,6 +192,33 @@ int Socket::recv_new(Memory &memory, int size1) {
 	this->recv(((char*)memory.data) + pos, size1);
 	return size1;
 }
+
+int Socket::recv(Buffer &buffer) {
+	int size1 = this->getCurSize();
+	if (size1 <= 0) return size1;
+
+	int pos = buffer.getPos();
+	int size = buffer.getSize();
+	int delta = pos + size1 - size;
+	if (delta > 0) buffer.setSize(pos + size1);
+	this->recv(((char*)buffer.data) + pos, size1);
+	buffer.setPos(pos + size1);
+	return size1;
+}
+
+int Socket::send(Buffer &buffer) {
+	if (!isValid()) return 0;
+
+	int read_pos = buffer.getReadPos();
+	int pos = buffer.getPos();
+	int delta = pos - read_pos;
+	if (delta <= 0) return delta;
+	int len = ::send(m_sock, ((char*)buffer.data) + read_pos, delta, 0);
+	if (len > 0) buffer.setReadPos(buffer.getReadPos() + len);
+	return len;
+}
+
+
 
 
 int Socket::send(String s) {
@@ -211,6 +239,7 @@ int Socket::send(void *buffer, int size) {
 int Socket::send(Memory &memory) {
 	return this->send(memory.data, memory.getSize());
 }
+
 
 bool Socket::sendAll(SOCKET sock, void *buffer, int size) {
 	if (sock <= 0) return false;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cj.h"
-using namespace cj;
+#include "core.h"
+using namespace core;
 
 namespace network {
 
@@ -39,6 +39,9 @@ public:
 	virtual int recv_new(Memory &memory);
 	virtual int recv(Memory &memory, int size);
 	virtual int recv_new(Memory &memory, int size1);
+
+	virtual int recv(Buffer &buffer);
+	virtual int send(Buffer &buffer);
 
 	virtual int send(String s);
 	virtual int send(void *buffer, int size);

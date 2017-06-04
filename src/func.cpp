@@ -3,7 +3,7 @@
 #include <ws2tcpip.h>
 
 namespace network {
-	Str getIpByHost(Str host) {
+	Str getIpByHost(Str host, Str port) {
 		int status;
 		struct addrinfo hints;
 		struct addrinfo *servinfo;  // указатель на результаты
@@ -13,9 +13,9 @@ namespace network {
 		hints.ai_socktype = SOCK_STREAM; // TCP stream-sockets
 		hints.ai_flags = AI_PASSIVE;     // заполните мой IP-адрес за меня
 
-		if ((status = getaddrinfo(host.to_string().c_str(), "80", &hints, &servinfo)) != 0) {
-			fprintf(stderr, "getaddrinfo error: %sn", gai_strerror(status));
-			exit(1);
+		if ((status = getaddrinfo(host.to_string().c_str(), port.to_string().c_str(), &hints, &servinfo)) != 0) {
+			freeaddrinfo(servinfo);
+			return "";
 		}
 
 		struct in_addr addr;
