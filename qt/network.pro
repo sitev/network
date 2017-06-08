@@ -6,20 +6,24 @@
 
 QT       -= core gui
 
-TARGET = cjNetwork
+TARGET = network
 TEMPLATE = lib
 CONFIG += staticlib
 
-INCLUDEPATH += ../../cjCore/src
+INCLUDEPATH += ../../core/src
 
 SOURCES += \
     ../src/socket.cpp \
-    ../src/webServer.cpp
+    ../src/func.cpp \
+    ../src/socket_handler.cpp \
+    ../src/wsa_socket_handler.cpp
 
 HEADERS += \
-    ../src/cjNetwork.h \
+    ../src/network.h \
     ../src/socket.h \
-    ../src/webServer.h
+    ../src/func.h \
+    ../src/socket_handler.h \
+    ../src/wsa_socket_handler.h
 
 unix {
     target.path = /usr/lib

@@ -1,6 +1,8 @@
 #include "network.h"
 
+#ifdef OS_WINDOWS
 #include <ws2tcpip.h>
+#endif
 
 namespace network {
 	Str getIpByHost(Str host, Str port) {
