@@ -87,10 +87,11 @@ bool Socket::connect(Str host, int port) {
 	if (!isValid())
 		return false;
 
+#ifdef OS_WINDOWS
 	m_addr.sin_family = AF_INET;
 	m_addr.sin_addr.S_un.S_addr = inet_addr(host.to_string().c_str());
 	m_addr.sin_port = htons(port);
-
+#endif
 	int status = 0;
 #ifdef OS_LINUX
 	status = inet_pton(AF_INET, host.to_string().c_str(), &m_addr.sin_addr);

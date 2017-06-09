@@ -4,8 +4,13 @@
 #include <ws2tcpip.h>
 #endif
 
+#ifdef OS_LINUX
+#include <netinet/in.h>
+#endif
+
 namespace network {
 	Str getIpByHost(Str host, Str port) {
+#ifdef OS_WINDOWS
 		int status;
 		struct addrinfo hints;
 		struct addrinfo *servinfo;  // указатель на результаты
@@ -26,5 +31,13 @@ namespace network {
 		freeaddrinfo(servinfo); // и освобождаем связанный список
 
 		return rez;
+#endif
+#ifdef OS_LINUX
+		hostent *record = gethostbyname(host.to_string().c_str());
+		if(record == NULL) return "";
+		in_addr *address = (in_addr*)record->h_addr;
+		string ip_address = inet_ntoa(*address);
+		return ip_address;
+#endif
 	}
 }
