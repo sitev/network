@@ -1,3 +1,5 @@
+#ifdef OS_WINDOWS
+
 #include <stdio.h>
 #include <time.h>
 #include "func.h"
@@ -117,3 +119,5 @@ namespace network {
 	}
 
 }
+
+#endif

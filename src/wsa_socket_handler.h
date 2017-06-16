@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef OS_WINDOWS
+
 #include "socket.h"
 
 #define PORT 5150
@@ -25,3 +27,4 @@ namespace network {
 
 }
 
+#endif
