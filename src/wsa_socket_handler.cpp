@@ -1,3 +1,5 @@
+#include "core.h"
+
 #ifdef OS_WINDOWS
 
 #include <stdio.h>

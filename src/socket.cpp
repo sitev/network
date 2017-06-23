@@ -215,7 +215,7 @@ int Socket::send(Buffer &buffer) {
 	int delta = pos - read_pos;
 	if (delta <= 0) return delta;
 	int len = ::send(m_sock, ((char*)buffer.data) + read_pos, delta, 0);
-	if (len > 0) buffer.setReadPos(buffer.getReadPos() + len);
+	if (len > 0) buffer.setReadPos(read_pos + len);
 	return len;
 }
 
