@@ -8,3 +8,7 @@
 #ifdef OS_WINDOWS
 #include "wsa_socket_handler.h"
 #endif
+
+#ifdef OS_WINDOWS
+#include "epoll_handler.h"
+#endif

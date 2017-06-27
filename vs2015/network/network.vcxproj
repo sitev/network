@@ -84,6 +84,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\epoll_handler.h" />
     <ClInclude Include="..\..\src\func.h" />
     <ClInclude Include="..\..\src\network.h" />
     <ClInclude Include="..\..\src\socket.h" />
@@ -91,6 +92,7 @@
     <ClInclude Include="..\..\src\wsa_socket_handler.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\epoll_handler.cpp" />
     <ClCompile Include="..\..\src\func.cpp" />
     <ClCompile Include="..\..\src\socket.cpp" />
     <ClCompile Include="..\..\src\socket_handler.cpp" />

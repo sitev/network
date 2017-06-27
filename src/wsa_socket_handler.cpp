@@ -18,48 +18,47 @@ namespace network {
 	}
 
 	bool WSASocketHandler::add(SOCKET sock) {
-		if ((EventArray[EventTotal] = WSACreateEvent()) == WSA_INVALID_EVENT) {
+		if ((EventArray[eventTotal] = WSACreateEvent()) == WSA_INVALID_EVENT) {
 			//printf("WSACreateEvent() failed with error %d\n", WSAGetLastError());
 			return false;
 		}
 
-		SocketArray[EventTotal] = sock;
+		SocketArray[eventTotal] = sock;
 
-		WSAEventSelect(sock, EventArray[EventTotal], FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE /*FD_ALL_EVENTS*/);
-		EventTotal++;
+		WSAEventSelect(sock, EventArray[eventTotal], FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE /*FD_ALL_EVENTS*/);
+		eventTotal++;
 
 		//printf("SocketHandler.add: sock = %d, total = %d\n", sock, EventTotal);
 
 		return true;
 	}
 
-	void WSASocketHandler::del(DWORD Event, bool isClose) {
-		SOCKET sock = SocketArray[Event];
+	void WSASocketHandler::delEvent(ulong event, bool isClose) {
+		SOCKET sock = SocketArray[event];
 		//printf("SocketHandler.del: sock = %d, total = %d\n", sock, EventTotal - 1);
 		if (isClose) closesocket(sock);
 
-		if (!WSACloseEvent(EventArray[Event]))
+		if (!WSACloseEvent(EventArray[event]))
 			printf("WSACloseEvent() failed miserably!\n");
 
 		// Squash the socket and event arrays
-		for (int i = Event; i < EventTotal; i++)
+		for (int i = event; i < eventTotal; i++)
 		{
 			EventArray[i] = EventArray[i + 1];
 			SocketArray[i] = SocketArray[i + 1];
 		}
-		EventTotal--;
+		eventTotal--;
 		//printf("----- del sock = %d, total = %d\n", sock, EventTotal);
 	}
 
-	void WSASocketHandler::delSock(SOCKET sock, bool isClose) {
+	void WSASocketHandler::del(SOCKET sock, bool isClose) {
 		//printf("----- delSock = %d\n", sock);
-		for (int i = 0; i < EventTotal; i++) {
+		for (int i = 0; i < eventTotal; i++) {
 			if (SocketArray[i] == sock) {
-				del(i, isClose);
+				delEvent(i, isClose);
 				return;
 			}
 		}
-		int a = 1;
 	}
 
 	uint WSASocketHandler::waitAll(int count, HANDLE *lpHandles, int dwSeconds) {
@@ -84,10 +83,10 @@ namespace network {
 
 			// Wait for one of the sockets to receive I/O notification and
 			//DWORD Event = WSAWaitForMultipleEvents(EventTotal, EventArray, false, WSA_INFINITE, FALSE);
-		uint Event = waitAll(EventTotal, EventArray, 50);
+		uint Event = waitAll(eventTotal, EventArray, 50);
 		if (Event == WSA_WAIT_FAILED) {
 			return false;
-			uint Event = waitAll(EventTotal, EventArray, 50);
+			uint Event = waitAll(eventTotal, EventArray, 50);
 			printf("WSAWaitForMultipleEvents() failed with error %d\n", WSAGetLastError());
 			return false;
 		}

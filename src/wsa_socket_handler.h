@@ -11,7 +11,7 @@
 namespace network {
 
 	class WSASocketHandler : public SocketHandler {
-		DWORD EventTotal = 0;
+		DWORD eventTotal = 0;
 		WSAEVENT EventArray[EVENT_COUNT];
 		SOCKET SocketArray[EVENT_COUNT];
 	public:
@@ -19,8 +19,8 @@ namespace network {
 		~WSASocketHandler();
 
 		bool add(SOCKET sock);
-		void del(DWORD Event, bool isClose = false);
-		void delSock(SOCKET sock, bool isClose = false);
+		void delEvent(ulong event, bool isClose = false);
+		void del(SOCKET sock, bool isClose = false);
 		uint waitAll(int nCount, HANDLE *lpHandles, int dwSeconds);
 		bool wait(DWORD &events, SOCKET &sock);
 	};
