@@ -1,0 +1,36 @@
+﻿  wsa_socket_handler.cpp
+c:\projects\core\src\strings.h(60): warning C4521: core::Str: заданы несколько конструкторов копии
+c:\projects\core\src\strings.h(119): warning C4521: core::String: заданы несколько конструкторов копии
+c:\projects\core\src\logger.h(48): warning C4005: LOGGER_OUT: изменение макроопределения
+  c:\projects\core\src\logger.h(47): note: см. предыдущее определение "LOGGER_OUT"
+c:\projects\network\src\wsa_socket_handler.cpp(45): warning C4018: <: несоответствие типов со знаком и без знака
+c:\projects\network\src\wsa_socket_handler.cpp(56): warning C4018: <: несоответствие типов со знаком и без знака
+  socket_handler.cpp
+c:\projects\core\src\strings.h(60): warning C4521: core::Str: заданы несколько конструкторов копии
+c:\projects\core\src\strings.h(119): warning C4521: core::String: заданы несколько конструкторов копии
+c:\projects\core\src\logger.h(48): warning C4005: LOGGER_OUT: изменение макроопределения
+  c:\projects\core\src\logger.h(47): note: см. предыдущее определение "LOGGER_OUT"
+  socket.cpp
+c:\projects\core\src\strings.h(60): warning C4521: core::Str: заданы несколько конструкторов копии
+c:\projects\core\src\strings.h(119): warning C4521: core::String: заданы несколько конструкторов копии
+c:\projects\core\src\logger.h(48): warning C4005: LOGGER_OUT: изменение макроопределения
+  c:\projects\core\src\logger.h(47): note: см. предыдущее определение "LOGGER_OUT"
+c:\projects\network\src\socket.cpp(92): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\um\winsock2.h(1830): note:  см. объявление "inet_addr"
+c:\projects\network\src\socket.cpp(573): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\um\winsock2.h(1830): note:  см. объявление "inet_addr"
+  func.cpp
+c:\projects\core\src\strings.h(60): warning C4521: core::Str: заданы несколько конструкторов копии
+c:\projects\core\src\strings.h(119): warning C4521: core::String: заданы несколько конструкторов копии
+c:\projects\core\src\logger.h(48): warning C4005: LOGGER_OUT: изменение макроопределения
+  c:\projects\core\src\logger.h(47): note: см. предыдущее определение "LOGGER_OUT"
+c:\projects\network\src\func.cpp(30): warning C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\um\winsock2.h(1848): note:  см. объявление "inet_ntoa"
+  epoll_handler.cpp
+c:\projects\core\src\strings.h(60): warning C4521: core::Str: заданы несколько конструкторов копии
+c:\projects\core\src\strings.h(119): warning C4521: core::String: заданы несколько конструкторов копии
+c:\projects\core\src\logger.h(48): warning C4005: LOGGER_OUT: изменение макроопределения
+  c:\projects\core\src\logger.h(47): note: см. предыдущее определение "LOGGER_OUT"
+  Создание кода...
+epoll_handler.obj : warning LNK4221: ▌ЄюЄ Їрщы юс·хъЄр эх юяЁхфхы хЄ ъръшх-ышсю Ёрэхх эхюяЁхфхыхээ√х юЄъЁ√Є√х ёшьтюы√, яю¤Єюьє юэ эх сєфхЄ шёяюы№чютрЄ№ё  эшъръшьш юяхЁрЎш ьш ъюьяюэютъш, юсЁр∙р■∙шьшё  ъ ¤Єющ сшсышюЄхъх
+  network.vcxproj -> C:\projects\network\vs2017\network\network\Debug\network.lib
