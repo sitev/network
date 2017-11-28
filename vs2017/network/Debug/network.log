@@ -33,4 +33,4 @@ c:\projects\core\src\logger.h(48): warning C4005: LOGGER_OUT: изменение
   c:\projects\core\src\logger.h(47): note: см. предыдущее определение "LOGGER_OUT"
   Создание кода...
 epoll_handler.obj : warning LNK4221: ▌ЄюЄ Їрщы юс·хъЄр эх юяЁхфхы хЄ ъръшх-ышсю Ёрэхх эхюяЁхфхыхээ√х юЄъЁ√Є√х ёшьтюы√, яю¤Єюьє юэ эх сєфхЄ шёяюы№чютрЄ№ё  эшъръшьш юяхЁрЎш ьш ъюьяюэютъш, юсЁр∙р■∙шьшё  ъ ¤Єющ сшсышюЄхъх
-  network.vcxproj -> C:\projects\network\vs2017\network\network\Debug\network.lib
+  network.vcxproj -> C:\projects\network\vs2017\network\Debug\network.lib

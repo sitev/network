@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{DE0F08D8-D4EB-4C6C-B85D-8AD3D1DCF60A}</ProjectGuid>
+    <ProjectGuid>{39C35897-BF3E-448A-9D4C-E413365B978B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>network</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\projects\core\src;$(IncludePath)</IncludePath>
+    <IncludePath>C:\projects\core\src;C:\projects\network\src;$(IncludePath)</IncludePath>
     <LibraryPath>C:\projects\core\vs2017\core\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -131,19 +131,19 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\epoll_handler.cpp" />
-    <ClCompile Include="..\..\..\src\func.cpp" />
-    <ClCompile Include="..\..\..\src\socket.cpp" />
-    <ClCompile Include="..\..\..\src\socket_handler.cpp" />
-    <ClCompile Include="..\..\..\src\wsa_socket_handler.cpp" />
+    <ClCompile Include="..\..\src\epoll_handler.cpp" />
+    <ClCompile Include="..\..\src\func.cpp" />
+    <ClCompile Include="..\..\src\socket.cpp" />
+    <ClCompile Include="..\..\src\socket_handler.cpp" />
+    <ClCompile Include="..\..\src\wsa_socket_handler.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\epoll_handler.h" />
-    <ClInclude Include="..\..\..\src\func.h" />
-    <ClInclude Include="..\..\..\src\network.h" />
-    <ClInclude Include="..\..\..\src\socket.h" />
-    <ClInclude Include="..\..\..\src\socket_handler.h" />
-    <ClInclude Include="..\..\..\src\wsa_socket_handler.h" />
+    <ClInclude Include="..\..\src\epoll_handler.h" />
+    <ClInclude Include="..\..\src\func.h" />
+    <ClInclude Include="..\..\src\network.h" />
+    <ClInclude Include="..\..\src\socket.h" />
+    <ClInclude Include="..\..\src\socket_handler.h" />
+    <ClInclude Include="..\..\src\wsa_socket_handler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
