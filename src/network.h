@@ -9,6 +9,6 @@
 #include "wsa_socket_handler.h"
 #endif
 
-#ifdef OS_WINDOWS
+#ifdef OS_LINUX
 #include "epoll_handler.h"
 #endif
