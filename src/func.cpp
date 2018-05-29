@@ -1,3 +1,5 @@
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include "network.h"
 
 #ifdef OS_WINDOWS
